@@ -1,0 +1,220 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: fieldops-postgres
+    environment:
+      POSTGRES_DB: fieldops_optimizer
+      POSTGRES_USER: fieldops_user
+      POSTGRES_PASSWORD: fieldops_password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fieldops_user -d fieldops_optimizer"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: fieldops-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass fieldops_redis_password
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: fieldops-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: fieldops_user
+      RABBITMQ_DEFAULT_PASS: fieldops_password
+      RABBITMQ_DEFAULT_VHOST: fieldops
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # OSRM Route Engine (OpenStreetMap routing)
+  osrm:
+    image: osrm/osrm-backend:latest
+    container_name: fieldops-osrm
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./infrastructure/osrm:/data
+    command: osrm-routed --algorithm mld /data/map.osrm
+    restart: unless-stopped
+    depends_on:
+      - osrm-init
+
+  # OSRM Data Preparation (runs once to prepare map data)
+  osrm-init:
+    image: osrm/osrm-backend:latest
+    container_name: fieldops-osrm-init
+    volumes:
+      - ./infrastructure/osrm:/data
+    command: |
+      sh -c "
+        if [ ! -f /data/map.osrm ]; then
+          echo 'Downloading map data for demo (using a small region)...';
+          wget -O /data/map.pbf 'http://download.geofabrik.de/north-america/us/district-of-columbia-latest.osm.pbf';
+          osrm-extract -p /opt/car.lua /data/map.pbf;
+          osrm-partition /data/map.osrm;
+          osrm-customize /data/map.osrm;
+          echo 'OSRM data preparation completed';
+        else
+          echo 'OSRM data already exists, skipping initialization';
+        fi
+      "
+
+  # Prometheus (Monitoring)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fieldops-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  # Grafana (Dashboards)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fieldops-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=fieldops_admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+      - ./infrastructure/grafana/dashboards:/var/lib/grafana/dashboards
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Seq (Structured Logging)
+  seq:
+    image: datalust/seq:latest
+    container_name: fieldops-seq
+    ports:
+      - "5341:80"
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=fieldops_admin
+    volumes:
+      - seq_data:/data
+    restart: unless-stopped
+
+  # Jaeger (Distributed Tracing)
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: fieldops-jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # HTTP collector
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    restart: unless-stopped
+
+  # Unleash (Feature Flags)
+  unleash-db:
+    image: postgres:15-alpine
+    container_name: fieldops-unleash-db
+    environment:
+      POSTGRES_DB: unleash
+      POSTGRES_USER: unleash_user
+      POSTGRES_PASSWORD: unleash_password
+    volumes:
+      - unleash_db_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  unleash:
+    image: unleashorg/unleash-server:latest
+    container_name: fieldops-unleash
+    ports:
+      - "4242:4242"
+    environment:
+      DATABASE_HOST: unleash-db
+      DATABASE_NAME: unleash
+      DATABASE_USERNAME: unleash_user
+      DATABASE_PASSWORD: unleash_password
+      DATABASE_SSL: "false"
+      LOG_LEVEL: warn
+      INIT_ADMIN_API_TOKENS: "*:*.unleash-insecure-admin-api-token"
+      INIT_CLIENT_API_TOKENS: "*:*.unleash-insecure-client-api-token"
+    depends_on:
+      - unleash-db
+    restart: unless-stopped
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:4242/health || exit 1
+      interval: 1m
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+
+  # MinIO (S3-compatible storage for file uploads)
+  minio:
+    image: minio/minio:latest
+    container_name: fieldops-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: fieldops_user
+      MINIO_ROOT_PASSWORD: fieldops_password
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  prometheus_data:
+  grafana_data:
+  seq_data:
+  unleash_db_data:
+  minio_data:
+
+networks:
+  default:
+    name: fieldops-network
