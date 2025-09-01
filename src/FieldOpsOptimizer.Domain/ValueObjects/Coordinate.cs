@@ -1,7 +1,19 @@
 namespace FieldOpsOptimizer.Domain.ValueObjects;
 
-public record Coordinate(double Latitude, double Longitude)
+public record Coordinate
 {
+    public double Latitude { get; init; }
+    public double Longitude { get; init; }
+    
+    // Parameterless constructor for EF Core
+    private Coordinate() { }
+    
+    public Coordinate(double latitude, double longitude)
+    {
+        Latitude = latitude;
+        Longitude = longitude;
+    }
+    
     public static Coordinate Zero => new(0, 0);
     
     public double DistanceToInKilometers(Coordinate other)

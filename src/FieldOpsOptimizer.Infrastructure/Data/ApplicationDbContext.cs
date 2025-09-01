@@ -14,7 +14,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<Technician> Technicians => Set<Technician>();
     public DbSet<ServiceJob> ServiceJobs => Set<ServiceJob>();
     public DbSet<Route> Routes => Set<Route>();
-    public DbSet<RouteStop> RouteStops => Set<RouteStop>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

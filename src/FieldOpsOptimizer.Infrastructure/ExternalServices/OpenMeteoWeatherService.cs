@@ -24,23 +24,8 @@ public class OpenMeteoWeatherService : IWeatherService
         _logger = logger;
         _options = options.Value;
         
+        // Simplified resilience pipeline for now
         _resiliencePipeline = new ResiliencePipelineBuilder()
-            .AddRetry(new()
-            {
-                ShouldHandle = new PredicateBuilder().Handle<HttpRequestException>(),
-                BackoffType = DelayBackoffType.Exponential,
-                UseJitter = true,
-                MaxRetryAttempts = 3,
-                Delay = TimeSpan.FromSeconds(1)
-            })
-            .AddCircuitBreaker(new()
-            {
-                HandledExceptions = { typeof(HttpRequestException) },
-                SamplingDuration = TimeSpan.FromSeconds(10),
-                FailureRatio = 0.5,
-                MinimumThroughput = 3,
-                BreakDuration = TimeSpan.FromSeconds(30)
-            })
             .AddTimeout(TimeSpan.FromSeconds(30))
             .Build();
     }
@@ -64,7 +49,7 @@ public class OpenMeteoWeatherService : IWeatherService
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonSerializer.Deserialize<OpenMeteoCurrentResponse>(content, new JsonSerializerOptions 
             { 
-                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower 
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
 
             if (result?.CurrentWeather == null)
@@ -113,7 +98,7 @@ public class OpenMeteoWeatherService : IWeatherService
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonSerializer.Deserialize<OpenMeteoForecastResponse>(content, new JsonSerializerOptions 
             { 
-                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower 
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
 
             if (result?.Hourly == null)

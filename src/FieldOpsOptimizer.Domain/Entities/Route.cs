@@ -42,7 +42,7 @@ public class Route : BaseEntity
 
     public void AddStop(ServiceJob job, int sequenceOrder, TimeSpan estimatedTravelTime)
     {
-        var stop = new RouteStop(job.Id, sequenceOrder, estimatedTravelTime);
+        var stop = new RouteStop(job.Id, Id, sequenceOrder, estimatedTravelTime);
         _stops.Add(stop);
         UpdateTimestamp();
     }
@@ -137,6 +137,7 @@ public class Route : BaseEntity
 public class RouteStop
 {
     public Guid JobId { get; private set; }
+    public Guid RouteId { get; private set; }
     public int SequenceOrder { get; private set; }
     public TimeSpan EstimatedTravelTime { get; private set; }
     public double DistanceFromPreviousKm { get; private set; }
@@ -144,14 +145,16 @@ public class RouteStop
     public DateTime? StartedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
 
-    // Navigation property
+    // Navigation properties
     public ServiceJob Job { get; private set; } = null!;
+    public Route Route { get; private set; } = null!;
 
     private RouteStop() { } // For EF Core
 
-    public RouteStop(Guid jobId, int sequenceOrder, TimeSpan estimatedTravelTime, double distanceFromPreviousKm = 0)
+    public RouteStop(Guid jobId, Guid routeId, int sequenceOrder, TimeSpan estimatedTravelTime, double distanceFromPreviousKm = 0)
     {
         JobId = jobId;
+        RouteId = routeId;
         SequenceOrder = sequenceOrder;
         EstimatedTravelTime = estimatedTravelTime;
         DistanceFromPreviousKm = distanceFromPreviousKm;

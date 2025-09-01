@@ -29,18 +29,18 @@ public class RouteConfiguration : IEntityTypeConfiguration<Route>
         builder.Property(r => r.TotalDistanceKm)
             .HasPrecision(10, 3);
 
+        // Configure the backing field relationship
+        builder.HasMany<RouteStop>("_stops")
+            .WithOne(rs => rs.Route)
+            .HasForeignKey(rs => rs.RouteId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
         // Relationships
         builder.HasOne(r => r.AssignedTechnician)
             .WithMany()
             .HasForeignKey(r => r.AssignedTechnicianId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasMany<RouteStop>()
-            .WithOne()
-            .HasForeignKey("RouteId")
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
 
         // Indexes
         builder.HasIndex(r => r.TenantId);
@@ -54,7 +54,8 @@ public class RouteStopConfiguration : IEntityTypeConfiguration<RouteStop>
 {
     public void Configure(EntityTypeBuilder<RouteStop> builder)
     {
-        builder.HasKey(rs => new { rs.JobId, RouteId = EF.Property<Guid>(rs, "RouteId") });
+        // Configure composite key using actual properties
+        builder.HasKey(rs => new { rs.JobId, rs.RouteId });
 
         builder.Property(rs => rs.DistanceFromPreviousKm)
             .HasPrecision(10, 3);
@@ -67,6 +68,7 @@ public class RouteStopConfiguration : IEntityTypeConfiguration<RouteStop>
             .OnDelete(DeleteBehavior.Restrict);
 
         // Indexes
+        builder.HasIndex(rs => rs.RouteId);
         builder.HasIndex(rs => rs.SequenceOrder);
         builder.HasIndex(rs => rs.EstimatedArrival);
     }

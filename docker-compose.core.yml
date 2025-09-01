@@ -4,9 +4,9 @@ services:
     image: postgres:15-alpine
     container_name: fieldops-postgres
     environment:
-      POSTGRES_DB: fieldops_optimizer
-      POSTGRES_USER: fieldops_user
-      POSTGRES_PASSWORD: fieldops_password
+      POSTGRES_DB: ${POSTGRES_DB:-fieldops_optimizer}
+      POSTGRES_USER: ${POSTGRES_USER:-fieldops_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
@@ -27,9 +27,9 @@ services:
     volumes:
       - redis_data:/data
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass fieldops_redis_password
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
     healthcheck:
-      test: ["CMD", "redis-cli", "auth", "fieldops_redis_password", "ping"]
+      test: ["CMD", "redis-cli", "auth", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -39,8 +39,8 @@ services:
     image: rabbitmq:3.12-management-alpine
     container_name: fieldops-rabbitmq
     environment:
-      RABBITMQ_DEFAULT_USER: fieldops_user
-      RABBITMQ_DEFAULT_PASS: fieldops_password
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-fieldops_user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
       RABBITMQ_DEFAULT_VHOST: fieldops
     ports:
       - "5672:5672"
@@ -101,8 +101,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=fieldops_admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
     volumes:
       - grafana_data:/var/lib/grafana
     restart: unless-stopped
@@ -119,7 +119,7 @@ services:
       - "5341:80"
     environment:
       - ACCEPT_EULA=Y
-      - SEQ_FIRSTRUN_ADMINPASSWORD=fieldops_admin
+      - SEQ_FIRSTRUN_ADMINPASSWORD=${SEQ_ADMIN_PASSWORD}
     volumes:
       - seq_data:/data
     restart: unless-stopped

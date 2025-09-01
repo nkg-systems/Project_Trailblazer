@@ -77,21 +77,39 @@ A comprehensive .NET 9/C# field operations optimizer that ingests open routing/t
 
 ### One-Command Local Deploy
 
+#### Option 1: Using PowerShell Script (Recommended)
+```powershell
+# Start core services (PostgreSQL, Redis, RabbitMQ)
+.\start-services.ps1 -Core
+
+# Or start all services
+.\start-services.ps1 -All
+
+# Stop all services
+.\start-services.ps1 -Stop
+```
+
+#### Option 2: Using Docker Compose Directly
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/field-ops-optimizer.git
-cd field-ops-optimizer
+# Start core services only
+docker compose -f docker-compose.core.yml up -d postgres redis rabbitmq
 
-# Start the complete infrastructure
+# Start with monitoring
+docker compose -f docker-compose.core.yml --profile monitoring up -d
+
+# Or start everything (may take longer due to OSRM initialization)
 docker compose up -d
+```
 
-# Run database migrations (after containers are up)
+#### Database Setup
+```bash
+# Run database migrations (after PostgreSQL is running)
 dotnet ef database update --project src/FieldOpsOptimizer.Infrastructure --startup-project src/FieldOpsOptimizer.Api
 
 # Start the API
 dotnet run --project src/FieldOpsOptimizer.Api
 
-# Start the Blazor WASM app
+# Start the Blazor WASM app  
 dotnet run --project src/FieldOpsOptimizer.Web
 ```
 
