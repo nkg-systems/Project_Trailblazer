@@ -119,13 +119,13 @@ After starting the services:
 
 - **Main Application**: http://localhost:5002
 - **API Documentation**: http://localhost:5001/swagger
-- **Grafana Dashboard**: http://localhost:3000 (admin/fieldops_admin)
+- **Grafana Dashboard**: http://localhost:3000 (see .env for credentials)
 - **Prometheus**: http://localhost:9090
-- **RabbitMQ Management**: http://localhost:15672 (fieldops_user/fieldops_password)
-- **Seq Logging**: http://localhost:5341 (admin/fieldops_admin)
+- **RabbitMQ Management**: http://localhost:15672 (see .env for credentials)
+- **Seq Logging**: http://localhost:5341 (see .env for credentials)
 - **Jaeger Tracing**: http://localhost:16686
 - **Unleash Feature Flags**: http://localhost:4242
-- **MinIO Console**: http://localhost:9001 (fieldops_user/fieldops_password)
+- **MinIO Console**: http://localhost:9001 (see .env for credentials)
 
 ## 📊 Project Status
 

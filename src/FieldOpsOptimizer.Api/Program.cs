@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Configure Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection") ?? 
-        "Host=localhost;Database=fieldops_optimizer;Username=fieldops_user;Password=fieldops_password"));
+        throw new InvalidOperationException("Database connection string 'DefaultConnection' not found. Please configure your connection string in appsettings.json or environment variables.")));
 
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
