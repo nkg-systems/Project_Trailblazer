@@ -23,23 +23,8 @@ public class OSRMRoutingService : IRoutingService
         _logger = logger;
         _options = options.Value;
         
+        // Simplified resilience pipeline for now
         _resiliencePipeline = new ResiliencePipelineBuilder()
-            .AddRetry(new()
-            {
-                ShouldHandle = new PredicateBuilder().Handle<HttpRequestException>(),
-                BackoffType = DelayBackoffType.Exponential,
-                UseJitter = true,
-                MaxRetryAttempts = 3,
-                Delay = TimeSpan.FromSeconds(1)
-            })
-            .AddCircuitBreaker(new()
-            {
-                HandledExceptions = { typeof(HttpRequestException) },
-                SamplingDuration = TimeSpan.FromSeconds(10),
-                FailureRatio = 0.5,
-                MinimumThroughput = 3,
-                BreakDuration = TimeSpan.FromSeconds(30)
-            })
             .AddTimeout(TimeSpan.FromSeconds(30))
             .Build();
     }
@@ -69,7 +54,7 @@ public class OSRMRoutingService : IRoutingService
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonSerializer.Deserialize<OSRMTableResponse>(content, new JsonSerializerOptions 
             { 
-                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower 
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
 
             if (result?.Code != "Ok")
@@ -109,9 +94,9 @@ public class OSRMRoutingService : IRoutingService
         var coordinates = new List<Coordinate> { request.StartLocation };
         coordinates.AddRange(request.Waypoints.Select(w => w.Location));
         
-        if (request.EndLocation.HasValue)
+        if (request.EndLocation != null)
         {
-            coordinates.Add(request.EndLocation.Value);
+            coordinates.Add(request.EndLocation);
         }
 
         // Get distance matrix
@@ -138,13 +123,13 @@ public class OSRMRoutingService : IRoutingService
         }
 
         // If round trip and no specific end location, return to start
-        if (request.RoundTrip && !request.EndLocation.HasValue)
+        if (request.RoundTrip && request.EndLocation == null)
         {
             totalDistance += matrix.Distances[currentIndex, 0];
             totalDuration += TimeSpan.FromSeconds(matrix.Durations[currentIndex, 0]);
             optimizedOrder.Add(0);
         }
-        else if (request.EndLocation.HasValue)
+        else if (request.EndLocation != null)
         {
             var endIndex = coordinates.Count - 1;
             totalDistance += matrix.Distances[currentIndex, endIndex];
@@ -203,7 +188,7 @@ public class OSRMRoutingService : IRoutingService
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonSerializer.Deserialize<OSRMRouteResponse>(content, new JsonSerializerOptions 
             { 
-                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower 
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
 
             if (result?.Code != "Ok" || result.Routes?.Length == 0)
