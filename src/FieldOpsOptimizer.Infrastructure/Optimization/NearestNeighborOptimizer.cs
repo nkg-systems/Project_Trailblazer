@@ -60,7 +60,8 @@ public class NearestNeighborOptimizer : IRouteOptimizer
             var optimizedStops = OptimizeWithNearestNeighbor(
                 validJobs, 
                 parameters, 
-                distanceMatrix);
+                distanceMatrix,
+                cancellationToken);
 
             // Calculate route metrics
             var result = BuildOptimizationResult(
@@ -100,7 +101,8 @@ public class NearestNeighborOptimizer : IRouteOptimizer
     private List<OptimizedRouteStop> OptimizeWithNearestNeighbor(
         List<ServiceJob> jobs,
         RouteOptimizationParameters parameters,
-        DistanceMatrix distanceMatrix)
+        DistanceMatrix distanceMatrix,
+        CancellationToken cancellationToken)
     {
         var result = new List<OptimizedRouteStop>();
         var remainingJobs = new List<ServiceJob>(jobs);

@@ -141,7 +141,7 @@ public class RouteOptimizationService : IRouteOptimizationService
         {
             OptimizationObjective.MinimizeDistance => result.TotalDistanceKm,
             OptimizationObjective.MinimizeTime => result.TotalDuration.TotalMinutes,
-            OptimizationObjective.MinimizeCost => (double)result.TotalCost,
+            OptimizationObjective.MaximizeRevenue => -(double)result.TotalCost, // Negate for maximization
             _ => result.TotalDistanceKm
         };
     }

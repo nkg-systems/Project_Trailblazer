@@ -28,7 +28,7 @@ public class TwoOptOptimizer : IRouteOptimizer
     {
         return objective is OptimizationObjective.MinimizeDistance or 
                OptimizationObjective.MinimizeTime or 
-               OptimizationObjective.MinimizeCost;
+               OptimizationObjective.MaximizeRevenue;
     }
 
     public async Task<RouteOptimizationResult> OptimizeRouteAsync(
@@ -167,12 +167,30 @@ public class TwoOptOptimizer : IRouteOptimizer
             {
                 OptimizationObjective.MinimizeDistance => distanceMatrix.GetDistance(fromIndex, toIndex),
                 OptimizationObjective.MinimizeTime => distanceMatrix.GetDuration(fromIndex, toIndex).TotalMinutes,
-                OptimizationObjective.MinimizeCost => CalculateCostMetric(fromIndex, toIndex, route[i + 1], distanceMatrix),
+                OptimizationObjective.MaximizeRevenue => -CalculateRevenueMetric(fromIndex, toIndex, route[i + 1], distanceMatrix),
                 _ => distanceMatrix.GetDistance(fromIndex, toIndex)
             };
         }
 
         return totalCost;
+    }
+
+    private double CalculateRevenueMetric(
+        int fromLocationIndex,
+        int toLocationIndex,
+        ServiceJob job,
+        DistanceMatrix distanceMatrix)
+    {
+        var distance = distanceMatrix.GetDistance(fromLocationIndex, toLocationIndex);
+        var time = distanceMatrix.GetDuration(fromLocationIndex, toLocationIndex).TotalHours;
+        
+        const double costPerKm = 0.50;
+        const double costPerHour = 25.0;
+        
+        var travelCost = (distance * costPerKm) + (time * costPerHour);
+        var revenueBenefit = (double)job.EstimatedRevenue;
+        
+        return revenueBenefit - travelCost; // Revenue minus cost
     }
 
     private double CalculateCostMetric(
