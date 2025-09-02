@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FieldOpsOptimizer.Infrastructure.Migrations
+namespace FieldOpsOptimizer.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -76,6 +76,46 @@ namespace FieldOpsOptimizer.Infrastructure.Migrations
                         principalTable: "Technicians",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Username = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Email = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    PasswordHash = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    FirstName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
+                    IsEmailVerified = table.Column<bool>(type: "boolean", nullable: false),
+                    LastLoginAt = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    RefreshToken = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    TenantId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    TechnicianId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Roles = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    TechnicianId1 = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp", nullable: true),
+                    CreatedBy = table.Column<string>(type: "text", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_Technicians_TechnicianId",
+                        column: x => x.TechnicianId,
+                        principalTable: "Technicians",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
+                        name: "FK_Users_Technicians_TechnicianId1",
+                        column: x => x.TechnicianId1,
+                        principalTable: "Technicians",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -263,6 +303,39 @@ namespace FieldOpsOptimizer.Infrastructure.Migrations
                 name: "IX_Technicians_TenantId",
                 table: "Technicians",
                 column: "TenantId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_RefreshToken",
+                table: "Users",
+                column: "RefreshToken");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_TechnicianId",
+                table: "Users",
+                column: "TechnicianId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_TechnicianId1",
+                table: "Users",
+                column: "TechnicianId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_TenantId_Username",
+                table: "Users",
+                columns: new[] { "TenantId", "Username" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_Username",
+                table: "Users",
+                column: "Username",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -270,6 +343,9 @@ namespace FieldOpsOptimizer.Infrastructure.Migrations
         {
             migrationBuilder.DropTable(
                 name: "RouteStop");
+
+            migrationBuilder.DropTable(
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "ServiceJobs");

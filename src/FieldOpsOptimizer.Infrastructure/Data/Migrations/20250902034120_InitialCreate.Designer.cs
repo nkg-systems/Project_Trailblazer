@@ -9,10 +9,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FieldOpsOptimizer.Infrastructure.Migrations
+namespace FieldOpsOptimizer.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250901004936_InitialCreate")]
+    [Migration("20250902034120_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -327,6 +327,105 @@ namespace FieldOpsOptimizer.Infrastructure.Migrations
                     b.ToTable("Technicians");
                 });
 
+            modelBuilder.Entity("FieldOpsOptimizer.Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("RefreshTokenExpiryTime")
+                        .HasColumnType("timestamp");
+
+                    b.Property<string>("Roles")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("TechnicianId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TechnicianId1")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("TenantId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_Email");
+
+                    b.HasIndex("RefreshToken")
+                        .HasDatabaseName("IX_Users_RefreshToken");
+
+                    b.HasIndex("TechnicianId");
+
+                    b.HasIndex("TechnicianId1");
+
+                    b.HasIndex("Username")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_Username");
+
+                    b.HasIndex("TenantId", "Username")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Users_TenantId_Username");
+
+                    b.ToTable("Users", (string)null);
+                });
+
             modelBuilder.Entity("FieldOpsOptimizer.Domain.Entities.Route", b =>
                 {
                     b.HasOne("FieldOpsOptimizer.Domain.Entities.Technician", "AssignedTechnician")
@@ -539,6 +638,20 @@ namespace FieldOpsOptimizer.Infrastructure.Migrations
                     b.Navigation("CurrentLocation");
 
                     b.Navigation("HomeAddress");
+                });
+
+            modelBuilder.Entity("FieldOpsOptimizer.Domain.Entities.User", b =>
+                {
+                    b.HasOne("FieldOpsOptimizer.Domain.Entities.Technician", null)
+                        .WithMany()
+                        .HasForeignKey("TechnicianId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FieldOpsOptimizer.Domain.Entities.Technician", "Technician")
+                        .WithMany()
+                        .HasForeignKey("TechnicianId1");
+
+                    b.Navigation("Technician");
                 });
 
             modelBuilder.Entity("FieldOpsOptimizer.Domain.Entities.Route", b =>
