@@ -81,8 +81,7 @@ public static class TracingConfiguration
                 metrics
                     .AddMeter("FieldOpsOptimizer.Api")
                     .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation();
+                    .AddHttpClientInstrumentation();
 
                 // Add exporters
                 if (!string.IsNullOrEmpty(otlpEndpoint))

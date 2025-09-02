@@ -14,7 +14,7 @@ public static class HealthCheckExtensions
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         if (!string.IsNullOrEmpty(connectionString))
         {
-            healthChecksBuilder.AddDbContextCheck<FieldOpsDbContext>("database");
+            healthChecksBuilder.AddDbContextCheck<ApplicationDbContext>("database");
             
             // SQL Server specific health check
             if (connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase))

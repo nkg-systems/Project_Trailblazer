@@ -120,7 +120,7 @@ public class ScheduleOptimizationRequestDto
     
     public List<Guid>? JobIds { get; set; }
     
-    public OptimizationObjective Objective { get; set; } = OptimizationObjective.MinimizeTravelTime;
+    public OptimizationObjective Objective { get; set; } = OptimizationObjective.MinimizeTime;
     
     public bool AllowRescheduling { get; set; } = true;
     

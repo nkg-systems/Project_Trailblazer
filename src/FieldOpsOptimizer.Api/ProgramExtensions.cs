@@ -152,7 +152,7 @@ public static class ProgramExtensions
         }
     }
 
-    private static void LogConfigurationSummary(ILogger logger, IConfiguration configuration)
+    private static void LogConfigurationSummary(Microsoft.Extensions.Logging.ILogger logger, IConfiguration configuration)
     {
         try
         {
@@ -232,9 +232,6 @@ public static class MonitoringConfigurationExtensions
 {
     public static IServiceCollection AddCustomMetrics(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add meters for .NET metrics
-        services.AddMetrics();
-        
         // Configure metrics export
         var metricsSection = configuration.GetSection("Metrics");
         if (metricsSection.Exists())

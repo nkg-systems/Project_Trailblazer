@@ -31,9 +31,9 @@ public class ApplicationMetrics
     private volatile int _availableTechniciansCount;
     private volatile int _activeRoutesCount;
 
-    public ApplicationMetrics(IMeterFactory meterFactory)
+    public ApplicationMetrics()
     {
-        _meter = meterFactory.Create(MeterName, "1.0.0");
+        _meter = new Meter(MeterName, "1.0.0");
 
         // Initialize counters
         _jobsCreatedCounter = _meter.CreateCounter<long>("jobs_created_total", "count", "Total number of jobs created");

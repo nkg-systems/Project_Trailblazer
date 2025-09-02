@@ -1,5 +1,6 @@
 using FieldOpsOptimizer.Api.Infrastructure.Metrics;
 using FieldOpsOptimizer.Api.Infrastructure.Tracing;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 

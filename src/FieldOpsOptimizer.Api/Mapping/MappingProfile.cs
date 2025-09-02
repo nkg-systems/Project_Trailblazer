@@ -32,22 +32,17 @@ public class MappingProfile : Profile
             
         CreateMap<CreateServiceJobDto, ServiceJob>()
             .ConstructUsing(src => new ServiceJob(
-                src.Title,
+                src.JobNumber ?? Guid.NewGuid().ToString(),
+                src.CustomerName,
+                new Address(src.ServiceAddress.Street, src.ServiceAddress.City, src.ServiceAddress.State, src.ServiceAddress.ZipCode, src.ServiceAddress.Country),
                 src.Description,
-                src.Priority,
-                src.JobType,
                 src.ScheduledDate,
                 src.EstimatedDuration,
-                src.RequiredSkills,
-                new Address(src.ServiceAddress.Street, src.ServiceAddress.City, src.ServiceAddress.State, src.ServiceAddress.ZipCode, src.ServiceAddress.Country),
-                new Coordinate(src.ServiceLatitude, src.ServiceLongitude),
-                src.CustomerName,
-                src.CustomerPhone,
-                src.CustomerEmail,
-                src.TenantId));
+                src.TenantId,
+                src.Priority));
 
         // Route mappings
-        CreateMap<Route, RouteDto>()
+        CreateMap<FieldOpsOptimizer.Domain.Entities.Route, RouteDto>()
             .ForMember(dest => dest.Stops, opt => opt.MapFrom(src => src.RouteStops.OrderBy(rs => rs.StopOrder).ToList()));
             
         CreateMap<RouteStop, RouteStopDto>();

@@ -14,8 +14,13 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using FieldOpsOptimizer.Api.Mapping;
+using FieldOpsOptimizer.Api;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure logging and monitoring first
+builder.ConfigureLoggingAndMonitoring();
 
 // Add services to the container.
 
@@ -129,32 +134,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.SuppressMapClientErrors = false;
 });
 
-// Configure Health Checks
-var healthChecksBuilder = builder.Services.AddHealthChecks();
-
-// Add database health check
-if (!builder.Environment.IsDevelopment() || !string.IsNullOrEmpty(builder.Configuration.GetConnectionString("DefaultConnection")))
-{
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    if (!string.IsNullOrEmpty(connectionString))
-    {
-        // Expand environment variables for production
-        if (!builder.Environment.IsDevelopment())
-        {
-            connectionString = Environment.ExpandEnvironmentVariables(connectionString);
-        }
-        
-        healthChecksBuilder.AddNpgSql(
-            connectionString,
-            healthQuery: "SELECT 1;",
-            name: "postgresql",
-            timeout: TimeSpan.FromSeconds(30),
-            tags: new[] { "db", "sql", "postgresql", "ready" });
-    }
-}
-
-// Add application health checks
-healthChecksBuilder.AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy(), tags: new[] { "api", "ready" });
+// Health checks are configured in ConfigureLoggingAndMonitoring()
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -192,7 +172,13 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// Add background services
+builder.Services.AddHostedService<MetricsUpdateService>();
+
 var app = builder.Build();
+
+// Configure the monitoring pipeline
+app.ConfigureMonitoringPipeline();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -203,54 +189,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Add global exception handling middleware
-app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-
+// Authentication and authorization are configured in ConfigureMonitoringPipeline()
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Configure Health Check endpoints
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = _ => true,
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var result = new
-        {
-            status = report.Status.ToString(),
-            timestamp = DateTime.UtcNow,
-            duration = report.TotalDuration,
-            checks = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                duration = e.Value.Duration,
-                description = e.Value.Description,
-                data = e.Value.Data,
-                tags = e.Value.Tags
-            })
-        };
-        await context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(result, new System.Text.Json.JsonSerializerOptions
-        {
-            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
-            WriteIndented = true
-        }));
-    }
-});
-
-// Readiness probe (for Kubernetes)
-app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = check => check.Tags.Contains("ready")
-});
-
-// Liveness probe (for Kubernetes)
-app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    Predicate = check => check.Tags.Contains("api")
-});
-
 app.MapControllers();
 
-app.Run();
+// Use enhanced startup and shutdown with proper logging
+try
+{
+    await app.StartWithLoggingAsync();
+    await app.WaitForShutdownAsync();
+}
+finally
+{
+    await app.StopWithLoggingAsync();
+}
