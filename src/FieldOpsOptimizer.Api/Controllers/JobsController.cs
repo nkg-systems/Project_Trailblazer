@@ -4,6 +4,7 @@ using FieldOpsOptimizer.Infrastructure.Data;
 using FieldOpsOptimizer.Domain.Entities;
 using FieldOpsOptimizer.Domain.Enums;
 using FieldOpsOptimizer.Domain.ValueObjects;
+using FieldOpsOptimizer.Domain.Exceptions;
 
 namespace FieldOpsOptimizer.Api.Controllers;
 
@@ -110,12 +111,7 @@ public class JobsController : ControllerBase
 
             if (job == null)
             {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Job not found",
-                    Detail = $"Service job with ID {id} was not found",
-                    Status = StatusCodes.Status404NotFound
-                });
+                throw new EntityNotFoundException(nameof(ServiceJob), id);
             }
 
             return Ok(MapToJobResponse(job));
@@ -148,12 +144,10 @@ public class JobsController : ControllerBase
             var validation = ValidateJobRequest(request);
             if (!validation.IsValid)
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Invalid job data",
-                    Detail = string.Join("; ", validation.Errors),
-                    Status = StatusCodes.Status400BadRequest
-                });
+                var errors = validation.Errors.ToDictionary(
+                    e => e.Split(':')[0], 
+                    e => new[] { e.Split(':', 2).Length > 1 ? e.Split(':', 2)[1].Trim() : e });
+                throw new ValidationException(errors);
             }
 
             // Create job entity using constructor
@@ -232,11 +226,7 @@ public class JobsController : ControllerBase
 
             if (job == null)
             {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Job not found",
-                    Detail = $"Service job with ID {id} was not found"
-                });
+                throw new EntityNotFoundException(nameof(ServiceJob), id);
             }
 
             _logger.LogInformation("Updating job {JobNumber}", job.JobNumber);
@@ -333,11 +323,7 @@ public class JobsController : ControllerBase
 
             if (job == null)
             {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Job not found",
-                    Detail = $"Service job with ID {id} was not found"
-                });
+                throw new EntityNotFoundException(nameof(ServiceJob), id);
             }
 
             // Validate technician exists
@@ -346,11 +332,7 @@ public class JobsController : ControllerBase
 
             if (technician == null)
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Technician not found",
-                    Detail = $"Technician with ID {request.TechnicianId} was not found"
-                });
+                throw new EntityNotFoundException(nameof(Technician), request.TechnicianId);
             }
 
             // Validate technician skills if required
@@ -359,11 +341,9 @@ public class JobsController : ControllerBase
                 var missingSkills = job.RequiredSkills.Except(technician.Skills).ToList();
                 if (missingSkills.Any())
                 {
-                    return BadRequest(new ProblemDetails
-                    {
-                        Title = "Technician lacks required skills",
-                        Detail = $"Technician is missing skills: {string.Join(", ", missingSkills)}"
-                    });
+                    throw new BusinessRuleValidationException(
+                        "TechnicianSkillsValidation",
+                        $"Technician is missing required skills: {string.Join(", ", missingSkills)}");
                 }
             }
 
@@ -405,11 +385,7 @@ public class JobsController : ControllerBase
 
             if (job == null)
             {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Job not found",
-                    Detail = $"Service job with ID {id} was not found"
-                });
+                throw new EntityNotFoundException(nameof(ServiceJob), id);
             }
 
             _logger.LogInformation("Updating job {JobNumber} status from {OldStatus} to {NewStatus}", 
@@ -447,21 +423,16 @@ public class JobsController : ControllerBase
 
             if (job == null)
             {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Job not found",
-                    Detail = $"Service job with ID {id} was not found"
-                });
+                throw new EntityNotFoundException(nameof(ServiceJob), id);
             }
 
             // Prevent deletion of jobs that are in progress or completed
             if (job.Status == JobStatus.InProgress || job.Status == JobStatus.Completed)
             {
-                return BadRequest(new ProblemDetails
-                {
-                    Title = "Cannot delete job",
-                    Detail = $"Jobs with status {job.Status} cannot be deleted"
-                });
+                throw new InvalidEntityStateException(
+                    nameof(ServiceJob), 
+                    job.Status.ToString(), 
+                    "delete");
             }
 
             _logger.LogInformation("Deleting job {JobNumber}", job.JobNumber);
@@ -568,11 +539,7 @@ public class JobsController : ControllerBase
 
             if (technician == null)
             {
-                return NotFound(new ProblemDetails
-                {
-                    Title = "Technician not found",
-                    Detail = $"Technician with ID {technicianId} was not found"
-                });
+                throw new EntityNotFoundException(nameof(Technician), technicianId);
             }
 
             // Get unassigned jobs that match technician skills
