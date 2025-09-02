@@ -14,6 +14,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Technician> Technicians => Set<Technician>();
     public DbSet<ServiceJob> ServiceJobs => Set<ServiceJob>();
     public DbSet<Route> Routes => Set<Route>();
+    public DbSet<User> Users => Set<User>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,6 +22,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ServiceJobConfiguration());
         modelBuilder.ApplyConfiguration(new RouteConfiguration());
         modelBuilder.ApplyConfiguration(new RouteStopConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
 
         // Global query filters for multi-tenancy (if needed)
         // This would filter by tenant automatically

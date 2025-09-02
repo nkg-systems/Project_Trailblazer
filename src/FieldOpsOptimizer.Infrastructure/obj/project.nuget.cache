@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "pceajYIFBpGhjkmKs5FhC2V2embRN4EuEaizuj4mGSbavqXhvG7/HI7cVfYrIT/KZLnCfMFiGI2L0PJ4cjzf0w==",
+  "dgSpecHash": "N+wvxmPQzRSVejZFNM53yHQeSGcBanz11lscmOoKVK52arzi9fUDOYpOD1mcieW1mXTkVggmRcQZvKW3KqQV2w==",
   "success": true,
   "projectFilePath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Infrastructure\\FieldOpsOptimizer.Infrastructure.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Greywater\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\fluentvalidation\\11.9.2\\fluentvalidation.11.9.2.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\mediatr\\13.0.0\\mediatr.13.0.0.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",
@@ -33,6 +34,7 @@
     "C:\\Users\\Greywater\\.nuget\\packages\\polly\\8.6.3\\polly.8.6.3.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\polly.core\\8.6.3\\polly.core.8.6.3.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\stackexchange.redis\\2.9.11\\stackexchange.redis.2.9.11.nupkg.sha512",
+    "C:\\Users\\Greywater\\.nuget\\packages\\system.identitymodel.tokens.jwt\\7.0.3\\system.identitymodel.tokens.jwt.7.0.3.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\system.io.pipelines\\5.0.1\\system.io.pipelines.5.0.1.nupkg.sha512"
   ],
   "logs": []
