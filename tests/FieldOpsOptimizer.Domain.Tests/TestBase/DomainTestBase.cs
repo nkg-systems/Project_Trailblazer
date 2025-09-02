@@ -59,14 +59,14 @@ public abstract class DomainTestBase : IDisposable
             Faker.Company.CompanyName(),
             Fixture.Create<Address>(),
             Faker.Lorem.Paragraph(),
-            Faker.Date.Future(),
+            DateTime.Today.AddDays(Faker.Random.Int(1, 30)),
             TimeSpan.FromHours(Faker.Random.Double(1, 8)),
             "test-tenant",
             Faker.PickRandom<JobPriority>()));
 
         Fixture.Register(() => new Route(
             Faker.Vehicle.Model(),
-            Faker.Date.Future(),
+            DateTime.Today.AddDays(Faker.Random.Int(1, 30)),
             Guid.NewGuid(),
             "test-tenant",
             Faker.PickRandom<OptimizationObjective>()));
@@ -123,7 +123,7 @@ public abstract class DomainTestBase : IDisposable
             Faker.Company.CompanyName(),
             address,
             Faker.Lorem.Paragraph(),
-            Faker.Date.Future(),
+            DateTime.Today.AddDays(Faker.Random.Int(1, 30)),
             TimeSpan.FromHours(Faker.Random.Double(1, 8)),
             "test-tenant",
             Faker.PickRandom<JobPriority>());
@@ -138,7 +138,7 @@ public abstract class DomainTestBase : IDisposable
     {
         var route = new Route(
             Faker.Vehicle.Model() + " Route",
-            Faker.Date.Future(),
+            DateTime.Today.AddDays(Faker.Random.Int(1, 30)),
             Guid.NewGuid(),
             "test-tenant",
             OptimizationObjective.MinimizeDistance);
@@ -163,6 +163,10 @@ public class DomainAutoDataAttribute : AutoDataAttribute
         fixture.Behaviors.OfType<ThrowingRecursionBehavior>().ToList()
             .ForEach(b => fixture.Behaviors.Remove(b));
         fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+        
+        // Configure DateTime to generate future dates
+        var random = new Random();
+        fixture.Register(() => DateTime.Today.AddDays(random.Next(1, 365)));
         
         return fixture;
     })
