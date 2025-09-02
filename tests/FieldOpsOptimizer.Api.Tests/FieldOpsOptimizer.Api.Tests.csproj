@@ -24,10 +24,13 @@
     <PackageReference Include="AutoFixture" Version="4.18.0" />
     <PackageReference Include="AutoFixture.Xunit2" Version="4.18.0" />
     <PackageReference Include="Moq" Version="4.20.69" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.14" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="3.6.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FieldOpsOptimizer.Api\FieldOpsOptimizer.Api.csproj" />
     <ProjectReference Include="..\..\src\FieldOpsOptimizer.Application\FieldOpsOptimizer.Application.csproj" />
     <ProjectReference Include="..\..\src\FieldOpsOptimizer.Domain\FieldOpsOptimizer.Domain.csproj" />
     <ProjectReference Include="..\..\src\FieldOpsOptimizer.Infrastructure\FieldOpsOptimizer.Infrastructure.csproj" />

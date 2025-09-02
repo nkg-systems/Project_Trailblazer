@@ -12,6 +12,8 @@ using FieldOpsOptimizer.Api.Middleware;
 using FieldOpsOptimizer.Api.Common;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using FieldOpsOptimizer.Api.Mapping;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +67,9 @@ else
                 errorCodesToAdd: null);
         }));
 }
+
+// Configure AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));

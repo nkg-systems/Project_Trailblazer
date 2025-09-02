@@ -1,10 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "w3wfOvUPSjIbZvfUtQfongnWI4na2k9A4pCRQOeugh9XD21B5Dv/NoTLRRLobcLn3YUuTMA7FUYky56BSCzh+Q==",
+  "dgSpecHash": "HbVzmON3Fh5/C+lzs3uGH+xumYPmyTl8XbCGlvpH2ByiYkqCLcp8NEMcnqf6czBVX2g5xvtwE6dI8sS2PkKDrg==",
   "success": true,
   "projectFilePath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Api\\FieldOpsOptimizer.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Greywater\\.nuget\\packages\\aspnetcore.healthchecks.npgsql\\7.0.0\\aspnetcore.healthchecks.npgsql.7.0.0.nupkg.sha512",
+    "C:\\Users\\Greywater\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
+    "C:\\Users\\Greywater\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\fluentvalidation\\11.9.2\\fluentvalidation.11.9.2.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
@@ -14,6 +16,7 @@
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.aspnetcore.openapi\\7.0.2\\microsoft.aspnetcore.openapi.7.0.2.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\8.0.0\\microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.bcl.timeprovider\\8.0.0\\microsoft.bcl.timeprovider.8.0.0.nupkg.sha512",
+    "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.csharp\\4.7.0\\microsoft.csharp.4.7.0.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.entityframeworkcore\\7.0.20\\microsoft.entityframeworkcore.7.0.20.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\7.0.20\\microsoft.entityframeworkcore.abstractions.7.0.20.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.entityframeworkcore.analyzers\\7.0.20\\microsoft.entityframeworkcore.analyzers.7.0.20.nupkg.sha512",

@@ -1,10 +1,2 @@
-namespace FieldOpsOptimizer.Domain.Tests;
-
-public class UnitTest1
-{
-    [Fact]
-    public void Test1()
-    {
-
-    }
-}
+// This file has been replaced with comprehensive domain entity tests.
+// See the Entities/ folder for actual test implementations.
