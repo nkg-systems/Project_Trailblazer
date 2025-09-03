@@ -8,16 +8,16 @@ using FieldOpsOptimizer.Domain.Enums;
 
 namespace FieldOpsOptimizer.Infrastructure.ExternalServices;
 
-public class OpenMeteoWeatherService : IWeatherService
+public class OpenMeteoWeatherService_Legacy
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<OpenMeteoWeatherService> _logger;
+    private readonly ILogger<OpenMeteoWeatherService_Legacy> _logger;
     private readonly OpenMeteoOptions _options;
     private readonly ResiliencePipeline _resiliencePipeline;
 
-    public OpenMeteoWeatherService(
+    public OpenMeteoWeatherService_Legacy(
         HttpClient httpClient,
-        ILogger<OpenMeteoWeatherService> logger,
+        ILogger<OpenMeteoWeatherService_Legacy> logger,
         IOptions<OpenMeteoOptions> options)
     {
         _httpClient = httpClient;

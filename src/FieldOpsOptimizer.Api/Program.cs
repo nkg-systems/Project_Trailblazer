@@ -86,6 +86,11 @@ builder.Services.AddScoped<NearestNeighborOptimizer>();
 builder.Services.AddScoped<TwoOptOptimizer>();
 builder.Services.AddScoped<GeneticOptimizer>();
 
+// Register weather service
+builder.Services.Configure<WeatherSettings>(builder.Configuration.GetSection(WeatherSettings.ConfigurationSection));
+builder.Services.AddHttpClient<IWeatherService, OpenWeatherMapService>();
+builder.Services.AddScoped<IWeatherService, OpenWeatherMapService>();
+
 // Register authentication services
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddScoped<IAuthService, AuthService>();

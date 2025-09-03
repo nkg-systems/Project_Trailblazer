@@ -52,3 +52,11 @@ public enum OptimizationObjective
     BalanceWorkload,
     MaximizeRevenue
 }
+
+public enum WeatherSeverity
+{
+    Mild = 1,
+    Moderate = 2,
+    Severe = 3,
+    Extreme = 4
+}

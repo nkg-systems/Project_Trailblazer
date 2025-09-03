@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Api\\FieldOpsOptimizer.Api.csproj": {}
+    "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.API\\FieldOpsOptimizer.API.csproj": {}
   },
   "projects": {
-    "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Api\\FieldOpsOptimizer.Api.csproj": {
+    "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.API\\FieldOpsOptimizer.API.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Api\\FieldOpsOptimizer.Api.csproj",
-        "projectName": "FieldOpsOptimizer.Api",
-        "projectPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Api\\FieldOpsOptimizer.Api.csproj",
+        "projectUniqueName": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.API\\FieldOpsOptimizer.API.csproj",
+        "projectName": "FieldOpsOptimizer.API",
+        "projectPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.API\\FieldOpsOptimizer.API.csproj",
         "packagesPath": "C:\\Users\\Greywater\\.nuget\\packages\\",
-        "outputPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Api\\obj\\",
+        "outputPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.API\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
