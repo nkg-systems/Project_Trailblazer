@@ -254,11 +254,13 @@ public class WeatherService : IWeatherService
         return new WeatherData(
             forecast.Location,
             forecast.DateTime,
+            forecast.DateTime.AddHours(1), // ValidUntil - forecast valid for 1 hour
+            forecast.Condition,
             forecast.TemperatureCelsius,
             forecast.Humidity / 100.0,
             forecast.WindSpeedKmh,
-            forecast.PrecipitationMm,
-            forecast.Condition,
+            forecast.Description ?? forecast.Condition.ToString(),
+            "MockWeatherService", // source
             tenantId);
     }
 

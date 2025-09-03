@@ -79,6 +79,26 @@ public record RouteOptimizationParameters
     /// Custom distance/time matrix if available
     /// </summary>
     public DistanceMatrix? DistanceMatrix { get; init; }
+
+    /// <summary>
+    /// Technician ID for compatibility with application layer
+    /// </summary>
+    public Guid TechnicianId => Technician.Id;
+
+    /// <summary>
+    /// Route start time
+    /// </summary>
+    public DateTime StartTime { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Route end time
+    /// </summary>
+    public DateTime EndTime { get; init; } = DateTime.UtcNow.AddHours(8);
+
+    /// <summary>
+    /// Additional route constraints to apply
+    /// </summary>
+    public IReadOnlyList<RouteConstraint> Constraints { get; init; } = new List<RouteConstraint>();
 }
 
 /// <summary>
@@ -135,6 +155,26 @@ public record RouteOptimizationResult
     /// Performance metrics and debug information
     /// </summary>
     public OptimizationMetrics Metrics { get; init; } = new();
+
+    /// <summary>
+    /// Optimized route for compatibility with application layer
+    /// </summary>
+    public IReadOnlyList<ServiceJob> OptimizedRoute => OptimizedStops.Select(s => s.Job).ToList();
+
+    /// <summary>
+    /// Algorithm used for compatibility with application layer
+    /// </summary>
+    public OptimizationAlgorithm AlgorithmUsed => Algorithm;
+
+    /// <summary>
+    /// Constraints violated for compatibility with application layer
+    /// </summary>
+    public IReadOnlyList<string> ConstraintsViolated => ConstraintViolations;
+
+    /// <summary>
+    /// Performance metrics for compatibility with application layer
+    /// </summary>
+    public Dictionary<string, object> PerformanceMetrics => Metrics.AdditionalMetrics;
 }
 
 /// <summary>
@@ -181,6 +221,37 @@ public record OptimizedRouteStop
     /// List of constraint violations for this stop
     /// </summary>
     public IReadOnlyList<string> ConstraintViolations { get; init; } = new List<string>();
+
+    // Compatibility properties for application layer
+    /// <summary>
+    /// Job ID for compatibility with application layer
+    /// </summary>
+    public Guid JobId => Job.Id;
+
+    /// <summary>
+    /// Job location for compatibility with application layer
+    /// </summary>
+    public Coordinate Location => Job.ServiceAddress?.Coordinate ?? new Coordinate(0, 0);
+
+    /// <summary>
+    /// Arrival time for compatibility with application layer
+    /// </summary>
+    public DateTime ArrivalTime => EstimatedArrival;
+
+    /// <summary>
+    /// Departure time for compatibility with application layer
+    /// </summary>
+    public DateTime DepartureTime => EstimatedDeparture;
+
+    /// <summary>
+    /// Estimated duration in minutes for compatibility with application layer
+    /// </summary>
+    public int EstimatedDurationMinutes => (int)(EstimatedDeparture - EstimatedArrival).TotalMinutes;
+
+    /// <summary>
+    /// Sequence number for compatibility with application layer
+    /// </summary>
+    public int SequenceNumber => SequenceOrder;
 }
 
 /// <summary>

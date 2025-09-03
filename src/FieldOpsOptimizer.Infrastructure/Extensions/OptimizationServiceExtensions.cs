@@ -1,3 +1,4 @@
+using FieldOpsOptimizer.Application.Common.Interfaces;
 using FieldOpsOptimizer.Domain.Enums;
 using FieldOpsOptimizer.Infrastructure.Optimization;
 using Microsoft.Extensions.DependencyInjection;

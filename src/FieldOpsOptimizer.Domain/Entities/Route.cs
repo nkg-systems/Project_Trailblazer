@@ -18,6 +18,12 @@ public class Route : BaseEntity
     public DateTime? CompletedAt { get; private set; }
     public string TenantId { get; private set; } = string.Empty;
     public OptimizationObjective OptimizationObjective { get; private set; } = OptimizationObjective.MinimizeDistance;
+    public bool IsOptimized { get; private set; } = false;
+    public TimeSpan TotalTravelTime => EstimatedDuration;
+    public double TotalDistance => TotalDistanceKm;
+    public double EstimatedFuelSavings { get; private set; } = 0.0;
+    public TimeSpan EstimatedTimeSavings { get; private set; } = TimeSpan.Zero;
+    public OptimizationAlgorithm? OptimizationAlgorithm { get; private set; }
 
     public IReadOnlyList<RouteStop> Stops => _stops.OrderBy(s => s.SequenceOrder).ToList().AsReadOnly();
 
@@ -54,11 +60,15 @@ public class Route : BaseEntity
         UpdateTimestamp();
     }
 
-    public void OptimizeStops(List<RouteStop> optimizedStops)
+    public void OptimizeStops(List<RouteStop> optimizedStops, OptimizationAlgorithm algorithm, double fuelSavings = 0.0, TimeSpan timeSavings = default)
     {
         _stops.Clear();
         _stops.AddRange(optimizedStops);
         Status = RouteStatus.Optimized;
+        IsOptimized = true;
+        OptimizationAlgorithm = algorithm;
+        EstimatedFuelSavings = fuelSavings;
+        EstimatedTimeSavings = timeSavings;
         CalculateTotals();
         UpdateTimestamp();
     }

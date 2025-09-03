@@ -27,7 +27,7 @@ public class RouteOptimizationService : IRouteOptimizationService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Optimizing route with {Algorithm} for {JobCount} jobs", 
-            algorithm, parameters.Jobs.Count);
+            algorithm.ToString(), parameters.Jobs.Count());
 
         var optimizer = GetOptimizer(algorithm);
         if (optimizer == null)
@@ -58,7 +58,7 @@ public class RouteOptimizationService : IRouteOptimizationService
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Comparing {AlgorithmCount} algorithms for {JobCount} jobs", 
-            algorithms.Count(), parameters.Jobs.Count);
+            algorithms.Count(), parameters.Jobs.Count());
 
         var results = new List<AppInterfaces.RouteOptimizationResult>();
         var tasks = new List<Task<AppInterfaces.RouteOptimizationResult>>();
@@ -181,15 +181,22 @@ public class RouteOptimizationService : IRouteOptimizationService
 
     private static DomainServices.RouteOptimizationParameters ConvertToDomainParameters(AppInterfaces.RouteOptimizationParameters appParams)
     {
-        // For now, return mock parameters - in practice this would properly convert
+        // Create a mock technician for now - in practice this would be retrieved from repository
+        var mockTechnician = new Technician(
+            "EMP001",
+            "Mock",
+            "Technician",
+            "mock@example.com",
+            "TenantId");
+
         return new DomainServices.RouteOptimizationParameters
         {
-            TechnicianId = Guid.NewGuid(),
+            Jobs = new List<ServiceJob>(),
+            Technician = mockTechnician,
             StartLocation = new Coordinate(37.7749, -122.4194), // San Francisco
             EndLocation = new Coordinate(37.7849, -122.4094),
             StartTime = DateTime.UtcNow,
             EndTime = DateTime.UtcNow.AddHours(8),
-            Jobs = new List<ServiceJob>(),
             Constraints = new List<RouteConstraint>(),
             Objective = appParams.Objective
         };
@@ -199,22 +206,32 @@ public class RouteOptimizationService : IRouteOptimizationService
     {
         return new AppInterfaces.RouteOptimizationResult
         {
-            OptimizedStops = domainResult.OptimizedRoute?.Select(job => new AppInterfaces.OptimizedStop
+            OptimizedStops = domainResult.OptimizedStops?.Select(stop => new AppInterfaces.OptimizedStop
             {
-                JobId = job.Id,
-                Location = job.Location,
-                ArrivalTime = DateTime.UtcNow, // Mock time
-                DepartureTime = DateTime.UtcNow.AddHours(1),
-                EstimatedDurationMinutes = 60,
-                SequenceNumber = 1
+                Job = stop.Job,
+                SequenceOrder = stop.SequenceOrder,
+                DistanceFromPreviousKm = stop.DistanceFromPreviousKm,
+                TravelTimeFromPrevious = stop.TravelTimeFromPrevious,
+                EstimatedArrival = stop.EstimatedArrival,
+                EstimatedDeparture = stop.EstimatedDeparture,
+                HasConstraintViolations = stop.HasConstraintViolations,
+                ConstraintViolations = stop.ConstraintViolations.ToList()
             }).ToList() ?? new List<AppInterfaces.OptimizedStop>(),
             TotalDistanceKm = domainResult.TotalDistanceKm,
             TotalDuration = domainResult.TotalDuration,
             TotalCost = domainResult.TotalCost,
             OptimizationTime = domainResult.OptimizationTime,
-            AlgorithmUsed = OptimizationAlgorithm.TwoOpt, // Default
-            ConstraintsViolated = new List<string>(),
-            PerformanceMetrics = new Dictionary<string, object>()
+            Algorithm = domainResult.Algorithm,
+            ConstraintViolations = domainResult.ConstraintViolations?.ToList() ?? new List<string>(),
+            Metrics = new AppInterfaces.OptimizationMetrics
+            {
+                InitialCost = domainResult.Metrics?.InitialCost ?? 0,
+                FinalCost = domainResult.Metrics?.FinalCost ?? 0,
+                ImprovementPercentage = domainResult.Metrics?.ImprovementPercentage ?? 0,
+                Evaluations = domainResult.Metrics?.Evaluations ?? 0
+            },
+            IsOptimal = domainResult.IsOptimal,
+            Iterations = domainResult.Iterations
         };
     }
 }

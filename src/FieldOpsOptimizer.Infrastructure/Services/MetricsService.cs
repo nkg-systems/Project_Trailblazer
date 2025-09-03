@@ -116,13 +116,13 @@ public class MetricsService : IMetricsService
         {
             TotalRoutes = routes.Count,
             OptimizedRoutes = routes.Count(r => r.IsOptimized),
-            AverageTravelTime = routes.Where(r => r.TotalTravelTime.HasValue).Average(r => r.TotalTravelTime!.Value.TotalHours),
-            AverageDistance = routes.Where(r => r.TotalDistance.HasValue).Average(r => r.TotalDistance!.Value),
-            TotalFuelSavings = routes.Sum(r => r.EstimatedFuelSavings ?? 0),
-            TotalTimeSavings = routes.Where(r => r.EstimatedTimeSavings.HasValue).Sum(r => r.EstimatedTimeSavings!.Value.TotalHours),
+            AverageTravelTime = routes.Any() ? routes.Average(r => r.TotalTravelTime.TotalHours) : 0,
+            AverageDistance = routes.Any() ? routes.Average(r => r.TotalDistance) : 0,
+            TotalFuelSavings = routes.Sum(r => r.EstimatedFuelSavings),
+            TotalTimeSavings = routes.Sum(r => r.EstimatedTimeSavings.TotalHours),
             AlgorithmUsage = routes
-                .Where(r => !string.IsNullOrEmpty(r.OptimizationAlgorithm))
-                .GroupBy(r => r.OptimizationAlgorithm!)
+                .Where(r => r.OptimizationAlgorithm.HasValue)
+                .GroupBy(r => r.OptimizationAlgorithm!.Value.ToString())
                 .ToDictionary(g => g.Key, g => g.Count())
         };
     }
