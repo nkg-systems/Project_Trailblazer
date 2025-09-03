@@ -216,6 +216,210 @@ public class TechniciansController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Updates an existing technician
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(TechnicianResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<TechnicianResponse>> UpdateTechnician(
+        Guid id,
+        [FromBody] UpdateTechnicianRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var technician = await _context.Technicians
+                .Include(t => t.WorkingHours)
+                .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+
+            if (technician == null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Technician not found",
+                    Detail = $"Technician with ID {id} was not found",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            _logger.LogInformation("Updating technician {EmployeeId}", technician.EmployeeId);
+
+            // Update contact information
+            if (!string.IsNullOrEmpty(request.FirstName) || !string.IsNullOrEmpty(request.LastName) ||
+                !string.IsNullOrEmpty(request.Email) || !string.IsNullOrEmpty(request.PhoneNumber))
+            {
+                technician.UpdateContactInfo(
+                    request.FirstName ?? technician.FirstName,
+                    request.LastName ?? technician.LastName,
+                    request.Email ?? technician.Email,
+                    request.PhoneNumber ?? technician.Phone);
+            }
+
+            // Update hourly rate
+            if (request.HourlyRate.HasValue)
+            {
+                technician.UpdateHourlyRate(request.HourlyRate.Value);
+            }
+
+            // Update status
+            if (request.Status.HasValue)
+            {
+                technician.UpdateStatus(request.Status.Value);
+            }
+
+            // Update skills
+            if (request.Skills?.Any() == true)
+            {
+                // Clear existing skills and add new ones
+                foreach (var existingSkill in technician.Skills.ToList())
+                {
+                    technician.RemoveSkill(existingSkill);
+                }
+                foreach (var newSkill in request.Skills)
+                {
+                    technician.AddSkill(newSkill);
+                }
+            }
+
+            // Update home address
+            if (request.HomeAddress != null)
+            {
+                var homeAddress = new Address(
+                    request.HomeAddress.Street,
+                    request.HomeAddress.City,
+                    request.HomeAddress.State,
+                    request.HomeAddress.PostalCode,
+                    request.HomeAddress.Country ?? "USA",
+                    "", // formatted address - will be computed
+                    request.HomeAddress.Coordinate);
+                
+                technician.SetHomeAddress(homeAddress);
+            }
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return Ok(MapToTechnicianResponse(technician));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating technician {TechnicianId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// Deactivates a technician (soft delete)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DeactivateTechnician(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var technician = await _context.Technicians
+                .Include(t => t.ServiceJobs.Where(j => j.Status == JobStatus.Scheduled || j.Status == JobStatus.InProgress))
+                .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+
+            if (technician == null)
+            {
+                return NotFound(new ProblemDetails
+                {
+                    Title = "Technician not found",
+                    Detail = $"Technician with ID {id} was not found",
+                    Status = StatusCodes.Status404NotFound
+                });
+            }
+
+            // Check if technician has active jobs
+            if (technician.ServiceJobs.Any())
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Cannot deactivate technician",
+                    Detail = "Technician has active or scheduled jobs. Please reassign jobs before deactivating.",
+                    Status = StatusCodes.Status400BadRequest
+                });
+            }
+
+            _logger.LogInformation("Deactivating technician {EmployeeId}", technician.EmployeeId);
+
+            technician.UpdateStatus(TechnicianStatus.Inactive);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deactivating technician {TechnicianId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// Gets technicians by skills and availability
+    /// </summary>
+    [HttpPost("search")]
+    [ProducesResponseType(typeof(List<TechnicianResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<TechnicianResponse>>> SearchTechnicians(
+        [FromBody] SearchTechniciansRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var query = _context.Technicians.AsQueryable();
+
+            // Filter by skills
+            if (request.RequiredSkills?.Any() == true)
+            {
+                foreach (var skill in request.RequiredSkills)
+                {
+                    query = query.Where(t => t.Skills.Contains(skill));
+                }
+            }
+
+            // Filter by status
+            if (request.Status.HasValue)
+            {
+                query = query.Where(t => t.Status == request.Status.Value);
+            }
+
+            // Filter by location radius
+            if (request.Location != null && request.RadiusKm > 0)
+            {
+                // Simplified distance calculation - in production, use spatial queries
+                query = query.Where(t => t.HomeAddress != null &&
+                    Math.Abs(t.HomeAddress.Coordinate!.Latitude - request.Location.Latitude) < request.RadiusKm * 0.009 &&
+                    Math.Abs(t.HomeAddress.Coordinate.Longitude - request.Location.Longitude) < request.RadiusKm * 0.009);
+            }
+
+            // Filter by availability date
+            if (request.AvailabilityDate.HasValue)
+            {
+                var targetDate = request.AvailabilityDate.Value.Date;
+                query = query.Where(t => !t.ServiceJobs.Any(j => 
+                    j.ScheduledDate.Date == targetDate &&
+                    (j.Status == JobStatus.Scheduled || j.Status == JobStatus.InProgress)));
+            }
+
+            var technicians = await query
+                .OrderBy(t => t.LastName)
+                .ThenBy(t => t.FirstName)
+                .Take(100) // Limit results
+                .ToListAsync(cancellationToken);
+
+            return Ok(technicians.Select(MapToTechnicianResponse).ToList());
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching technicians");
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     private static TechnicianResponse MapToTechnicianResponse(Technician technician)
     {
         return new TechnicianResponse
@@ -303,6 +507,30 @@ public record WorkingHoursResponse
     public DayOfWeek DayOfWeek { get; init; }
     public TimeSpan StartTime { get; init; }
     public TimeSpan EndTime { get; init; }
+}
+
+public record UpdateTechnicianRequest
+{
+    public string? FirstName { get; init; }
+    public string? LastName { get; init; }
+    public string? Email { get; init; }
+    public string? PhoneNumber { get; init; }
+    public decimal? HourlyRate { get; init; }
+    public TechnicianStatus? Status { get; init; }
+    public List<string>? Skills { get; init; }
+    public AddressRequest? HomeAddress { get; init; }
+    public List<WorkingHoursRequest>? WorkingHours { get; init; }
+}
+
+public record SearchTechniciansRequest
+{
+    public List<string>? RequiredSkills { get; init; }
+    public TechnicianStatus? Status { get; init; }
+    public Coordinate? Location { get; init; }
+    public double RadiusKm { get; init; } = 10;
+    public DateTime? AvailabilityDate { get; init; }
+    public decimal? MinHourlyRate { get; init; }
+    public decimal? MaxHourlyRate { get; init; }
 }
 
 // AddressRequest and AddressResponse are defined in JobsController
