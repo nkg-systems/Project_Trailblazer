@@ -26,9 +26,14 @@ public class Route : BaseEntity
     public OptimizationAlgorithm? OptimizationAlgorithm { get; private set; }
 
     public IReadOnlyList<RouteStop> Stops => _stops.OrderBy(s => s.SequenceOrder).ToList().AsReadOnly();
+    
+    // Alias for ScheduledDate to maintain API compatibility
+    public DateTime Date => ScheduledDate;
 
     // Navigation properties
     public Technician AssignedTechnician { get; private set; } = null!;
+    public Technician? Technician => AssignedTechnician; // Alias for API compatibility
+    public virtual ICollection<RouteStop> RouteStops { get; private set; } = new List<RouteStop>();
 
     private Route() { } // For EF Core
 

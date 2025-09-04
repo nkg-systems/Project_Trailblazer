@@ -18,6 +18,7 @@ public class ServiceJob : BaseEntity
     public string? Notes { get; private set; }
     public JobStatus Status { get; private set; } = JobStatus.Scheduled;
     public JobPriority Priority { get; private set; } = JobPriority.Medium;
+    public JobType JobType { get; private set; } = JobType.Other;
     public DateTime ScheduledDate { get; private set; }
     public TimeSpan? PreferredTimeWindow { get; private set; }
     public TimeSpan EstimatedDuration { get; private set; }
@@ -25,6 +26,7 @@ public class ServiceJob : BaseEntity
     public Guid? AssignedTechnicianId { get; private set; }
     public Guid? RouteId { get; private set; }
     public decimal EstimatedRevenue { get; private set; }
+    public decimal EstimatedCost { get; private set; }
     public string TenantId { get; private set; } = string.Empty;
 
     public IReadOnlyList<string> RequiredSkills => _requiredSkills.AsReadOnly();
@@ -109,6 +111,19 @@ public class ServiceJob : BaseEntity
     public void UpdatePriority(JobPriority priority)
     {
         Priority = priority;
+        UpdateTimestamp();
+    }
+
+    public void UpdateJobType(JobType jobType)
+    {
+        JobType = jobType;
+        UpdateTimestamp();
+    }
+
+    public void UpdateEstimates(decimal estimatedRevenue, decimal estimatedCost)
+    {
+        EstimatedRevenue = estimatedRevenue;
+        EstimatedCost = estimatedCost;
         UpdateTimestamp();
     }
 

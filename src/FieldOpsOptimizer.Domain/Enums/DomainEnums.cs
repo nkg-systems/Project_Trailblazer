@@ -60,3 +60,24 @@ public enum WeatherSeverity
     Severe = 3,
     Extreme = 4
 }
+
+public enum JobType
+{
+    Installation,
+    Maintenance,
+    Repair,
+    Inspection,
+    Emergency,
+    Consultation,
+    Other
+}
+
+// Alias for JobStatus to maintain compatibility with API controllers
+public enum ServiceJobStatus
+{
+    Scheduled = 0,
+    InProgress = 1,
+    Completed = 2,
+    Cancelled = 3,
+    OnHold = 4
+}

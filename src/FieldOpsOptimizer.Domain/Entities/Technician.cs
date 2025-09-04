@@ -26,6 +26,9 @@ public class Technician : BaseEntity
 
     public string FullName => $"{FirstName} {LastName}";
 
+    // Navigation properties
+    public virtual ICollection<ServiceJob> ServiceJobs { get; private set; } = new List<ServiceJob>();
+
     private Technician() { } // For EF Core
 
     public Technician(
@@ -94,6 +97,12 @@ public class Technician : BaseEntity
         UpdateTimestamp();
     }
 
+    public void UpdateHourlyRate(decimal hourlyRate)
+    {
+        HourlyRate = hourlyRate;
+        UpdateTimestamp();
+    }
+
     public bool IsAvailableAt(DateTime dateTime)
     {
         if (Status != TechnicianStatus.Active)
@@ -109,4 +118,40 @@ public class Technician : BaseEntity
     }
 }
 
-public record WorkingHours(DayOfWeek DayOfWeek, TimeSpan StartTime, TimeSpan EndTime);
+public class WorkingHours : BaseEntity
+{
+    public new Guid Id { get; private set; }
+    public Guid TechnicianId { get; private set; }
+    public DayOfWeek DayOfWeek { get; private set; }
+    public TimeSpan StartTime { get; private set; }
+    public TimeSpan EndTime { get; private set; }
+    public bool IsAvailable { get; private set; } = true;
+
+    // Navigation properties
+    public Technician? Technician { get; private set; }
+
+    private WorkingHours() { } // For EF Core
+
+    public WorkingHours(DayOfWeek dayOfWeek, TimeSpan startTime, TimeSpan endTime, Guid? technicianId = null)
+    {
+        Id = Guid.NewGuid();
+        DayOfWeek = dayOfWeek;
+        StartTime = startTime;
+        EndTime = endTime;
+        if (technicianId.HasValue)
+            TechnicianId = technicianId.Value;
+    }
+
+    public void SetAvailability(bool isAvailable)
+    {
+        IsAvailable = isAvailable;
+        UpdateTimestamp();
+    }
+
+    public void UpdateHours(TimeSpan startTime, TimeSpan endTime)
+    {
+        StartTime = startTime;
+        EndTime = endTime;
+        UpdateTimestamp();
+    }
+}
