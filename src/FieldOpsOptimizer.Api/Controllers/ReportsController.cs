@@ -289,7 +289,6 @@ public class ReportsController : ControllerBase
 
             var routes = await query
                 .Where(r => r.Date >= dateStart && r.Date <= dateEnd)
-                .Include(r => r.RouteStops)
                 .Include(r => r.AssignedTechnician)
                 .ToListAsync();
 
@@ -572,7 +571,7 @@ public class ReportsController : ControllerBase
                          $"\"{route.OptimizationAlgorithm?.ToString() ?? ""}\"," +
                          $"{route.EstimatedTimeSavings.TotalHours}," +
                          $"{route.EstimatedFuelSavings}," +
-                         $"{route.RouteStops.Count}");
+                         $"{route.Stops.Count()}");
         }
 
         return csv.ToString();

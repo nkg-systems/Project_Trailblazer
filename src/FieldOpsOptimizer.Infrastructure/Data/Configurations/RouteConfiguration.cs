@@ -29,11 +29,8 @@ public class RouteConfiguration : IEntityTypeConfiguration<Route>
         builder.Property(r => r.TotalDistanceKm)
             .HasPrecision(10, 3);
 
-        // Configure the backing field relationship
-        builder.HasMany<RouteStop>("_stops")
-            .WithOne(rs => rs.Route)
-            .HasForeignKey(rs => rs.RouteId)
-            .OnDelete(DeleteBehavior.Cascade);
+        // The RouteStop relationship is configured from the RouteStop side
+        // This backing field will be populated by EF Core automatically
         
         // Relationships
         builder.HasOne(r => r.AssignedTechnician)
@@ -66,6 +63,13 @@ public class RouteStopConfiguration : IEntityTypeConfiguration<RouteStop>
             .HasForeignKey(rs => rs.JobId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure Route relationship to ensure FK is correctly mapped
+        builder.HasOne(rs => rs.Route)
+            .WithMany("_stops")
+            .HasForeignKey(rs => rs.RouteId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Indexes
         builder.HasIndex(rs => rs.RouteId);

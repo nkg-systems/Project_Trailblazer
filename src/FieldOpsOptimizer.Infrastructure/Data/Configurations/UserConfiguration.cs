@@ -80,9 +80,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasDatabaseName("IX_Users_RefreshToken");
 
         // Configure relationship with Technician
-        builder.HasOne<Technician>()
+        builder.HasOne(u => u.Technician)
             .WithMany()
             .HasForeignKey(u => u.TechnicianId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.SetNull);
 
         // Configure table name

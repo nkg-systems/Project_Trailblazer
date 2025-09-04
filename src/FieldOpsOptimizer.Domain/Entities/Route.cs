@@ -33,7 +33,6 @@ public class Route : BaseEntity
     // Navigation properties
     public Technician AssignedTechnician { get; private set; } = null!;
     public Technician? Technician => AssignedTechnician; // Alias for API compatibility
-    public virtual ICollection<RouteStop> RouteStops { get; private set; } = new List<RouteStop>();
 
     private Route() { } // For EF Core
 

@@ -1,5 +1,6 @@
 using FieldOpsOptimizer.Infrastructure.Data;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace FieldOpsOptimizer.Api.Infrastructure.HealthChecks;
@@ -10,16 +11,18 @@ public static class HealthCheckExtensions
     {
         var healthChecksBuilder = services.AddHealthChecks();
 
-        // Database health check
+        // Database health check - use simple connection check instead of EF model validation
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         if (!string.IsNullOrEmpty(connectionString))
         {
-            healthChecksBuilder.AddDbContextCheck<ApplicationDbContext>("database");
+            // Use a simple database connection check instead of full EF DbContext validation
+            // This avoids EF Core model validation issues while still checking database connectivity
+            healthChecksBuilder.AddCheck<DatabaseConnectionHealthCheck>("database");
             
-            // SQL Server specific health check
-            if (connectionString.Contains("Server=", StringComparison.OrdinalIgnoreCase))
+            // PostgreSQL specific health check for connection validation
+            if (connectionString.Contains("Host=", StringComparison.OrdinalIgnoreCase))
             {
-                healthChecksBuilder.AddSqlServer(connectionString, name: "sqlserver");
+                healthChecksBuilder.AddNpgSql(connectionString, name: "postgresql");
             }
         }
 
@@ -155,6 +158,49 @@ public class DiskSpaceHealthCheck : IHealthCheck
         {
             _logger.LogError(ex, "Error checking disk space health");
             return Task.FromResult(HealthCheckResult.Unhealthy("Unable to check disk space", ex));
+        }
+    }
+}
+
+public class DatabaseConnectionHealthCheck : IHealthCheck
+{
+    private readonly ApplicationDbContext _context;
+    private readonly ILogger<DatabaseConnectionHealthCheck> _logger;
+
+    public DatabaseConnectionHealthCheck(ApplicationDbContext context, ILogger<DatabaseConnectionHealthCheck> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
+    public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Simple database connection check without EF model validation
+            var canConnect = await _context.Database.CanConnectAsync(cancellationToken);
+            
+            if (canConnect)
+            {
+                var data = new Dictionary<string, object>
+                {
+                    ["ConnectionState"] = "Connected",
+                    ["Provider"] = "PostgreSQL"
+                };
+
+                _logger.LogDebug("Database connection check passed");
+                return HealthCheckResult.Healthy("Database connection is healthy", data);
+            }
+            else
+            {
+                _logger.LogWarning("Database connection check failed - cannot connect");
+                return HealthCheckResult.Unhealthy("Cannot connect to database");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during database connection health check");
+            return HealthCheckResult.Unhealthy("Database connection check failed", ex);
         }
     }
 }

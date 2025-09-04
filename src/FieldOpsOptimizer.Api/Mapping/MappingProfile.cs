@@ -40,7 +40,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.TechnicianId, opt => opt.MapFrom(src => src.AssignedTechnicianId))
             .ForMember(dest => dest.RouteDate, opt => opt.MapFrom(src => src.Date))
-            .ForMember(dest => dest.Stops, opt => opt.MapFrom(src => src.RouteStops.OrderBy(rs => rs.SequenceOrder).ToList()));
+            .ForMember(dest => dest.Stops, opt => opt.MapFrom(src => src.Stops));
             
         CreateMap<RouteStop, RouteStopDto>()
             .ForMember(dest => dest.StopOrder, opt => opt.MapFrom(src => src.SequenceOrder))

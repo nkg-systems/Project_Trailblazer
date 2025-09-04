@@ -76,6 +76,9 @@ else
 // Configure AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+// Add memory cache for weather service
+builder.Services.AddMemoryCache();
+
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
