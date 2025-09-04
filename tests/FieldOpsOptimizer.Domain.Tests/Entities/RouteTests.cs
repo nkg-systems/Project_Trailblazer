@@ -72,7 +72,7 @@ public class RouteTests : DomainTestBase
         stop.RouteId.Should().Be(route.Id);
         stop.SequenceOrder.Should().Be(sequenceOrder);
         stop.EstimatedTravelTime.Should().Be(estimatedTravelTime);
-        route.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        route.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public class RouteTests : DomainTestBase
         };
 
         // Act
-        route.OptimizeStops(optimizedStops);
+        route.OptimizeStops(optimizedStops, OptimizationAlgorithm.TwoOpt);
 
         // Assert
         route.Status.Should().Be(RouteStatus.Optimized);
@@ -177,7 +177,7 @@ public class RouteTests : DomainTestBase
 
         // Assert
         route.Status.Should().Be(newStatus);
-        route.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        route.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -311,7 +311,7 @@ public class RouteTests : DomainTestBase
 
         // Assert
         route.AssignedTechnicianId.Should().Be(newTechnicianId);
-        route.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        route.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -426,16 +426,16 @@ public class RouteTests : DomainTestBase
 
         // Act & Assert - Test multiple operations update the timestamp
         route.ReassignTechnician(Guid.NewGuid());
-        route.UpdatedAt.Should().BeAfter(originalTimestamp);
+        route.UpdatedAt.Should().BeAfter(originalTimestamp.Value);
 
         var timestamp2 = route.UpdatedAt;
         route.UpdateStatus(RouteStatus.InProgress);
-        route.UpdatedAt.Should().BeAfter(timestamp2);
+        route.UpdatedAt.Should().BeAfter(timestamp2.Value);
 
         var timestamp3 = route.UpdatedAt;
         var job = CreateValidServiceJob();
         route.AddStop(job, 1, TimeSpan.FromMinutes(15));
-        route.UpdatedAt.Should().BeAfter(timestamp3);
+        route.UpdatedAt.Should().BeAfter(timestamp3.Value);
     }
 }
 

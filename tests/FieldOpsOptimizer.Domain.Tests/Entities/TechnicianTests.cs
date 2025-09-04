@@ -77,7 +77,7 @@ public class TechnicianTests : DomainTestBase
         technician.Email.Should().Be(newEmail);
         technician.Phone.Should().Be(newPhone);
         technician.FullName.Should().Be($"{newFirstName} {newLastName}");
-        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public class TechnicianTests : DomainTestBase
         // Assert
         technician.CurrentLocation.Should().Be(newLocation);
         technician.LastLocationUpdate.Should().Be(timestamp);
-        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public class TechnicianTests : DomainTestBase
 
         // Assert
         technician.HomeAddress.Should().Be(address);
-        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public class TechnicianTests : DomainTestBase
 
         // Assert
         technician.Skills.Should().Contain(skill);
-        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -258,7 +258,7 @@ public class TechnicianTests : DomainTestBase
         // Assert
         technician.WorkingHours.Should().HaveCount(3);
         technician.WorkingHours.Should().BeEquivalentTo(newWorkingHours);
-        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Theory]
@@ -276,7 +276,7 @@ public class TechnicianTests : DomainTestBase
 
         // Assert
         technician.Status.Should().Be(newStatus);
-        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        technician.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Theory]
@@ -386,15 +386,15 @@ public class TechnicianTests : DomainTestBase
 
         // Act & Assert - Test multiple operations update the timestamp
         technician.UpdateContactInfo("New First", "New Last", "new@email.com");
-        technician.UpdatedAt.Should().BeAfter(originalTimestamp);
+        technician.UpdatedAt.Should().BeAfter(originalTimestamp.Value);
 
         var timestamp2 = technician.UpdatedAt;
         technician.AddSkill("New Skill");
-        technician.UpdatedAt.Should().BeAfter(timestamp2);
+        technician.UpdatedAt.Should().BeAfter(timestamp2.Value);
 
         var timestamp3 = technician.UpdatedAt;
         technician.UpdateStatus(TechnicianStatus.Inactive);
-        technician.UpdatedAt.Should().BeAfter(timestamp3);
+        technician.UpdatedAt.Should().BeAfter(timestamp3.Value);
     }
 
     [Fact]

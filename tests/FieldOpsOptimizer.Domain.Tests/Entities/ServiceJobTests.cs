@@ -59,7 +59,7 @@ public class ServiceJobTests : DomainTestBase
         job.CustomerName.Should().Be(newCustomerName);
         job.CustomerPhone.Should().Be(newPhone);
         job.CustomerEmail.Should().Be(newEmail);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public class ServiceJobTests : DomainTestBase
         // Assert
         job.Description.Should().Be(newDescription);
         job.Notes.Should().Be(newNotes);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public class ServiceJobTests : DomainTestBase
         // Assert
         job.ScheduledDate.Should().Be(newScheduledDate);
         job.PreferredTimeWindow.Should().Be(newTimeWindow);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class ServiceJobTests : DomainTestBase
 
         // Assert
         job.AssignedTechnicianId.Should().Be(technicianId);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public class ServiceJobTests : DomainTestBase
 
         // Assert
         job.AssignedTechnicianId.Should().BeNull();
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class ServiceJobTests : DomainTestBase
 
         // Assert
         job.RouteId.Should().Be(routeId);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Theory]
@@ -161,7 +161,7 @@ public class ServiceJobTests : DomainTestBase
 
         // Assert
         job.Status.Should().Be(newStatus);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public class ServiceJobTests : DomainTestBase
 
         // Assert
         job.Priority.Should().Be(newPriority);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -212,7 +212,7 @@ public class ServiceJobTests : DomainTestBase
 
         // Assert
         job.RequiredSkills.Should().Contain(skill);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -290,7 +290,7 @@ public class ServiceJobTests : DomainTestBase
 
         // Assert
         job.Tags.Should().Contain(tag);
-        job.UpdatedAt.Should().BeAfter(originalUpdatedAt);
+        job.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
     }
 
     [Fact]
@@ -473,14 +473,14 @@ public class ServiceJobTests : DomainTestBase
 
         // Act & Assert - Test multiple operations update the timestamp
         job.UpdateCustomerInfo("New Customer");
-        job.UpdatedAt.Should().BeAfter(originalTimestamp);
+        job.UpdatedAt.Should().BeAfter(originalTimestamp.Value);
 
         var timestamp2 = job.UpdatedAt;
         job.UpdateServiceDetails("New description");
-        job.UpdatedAt.Should().BeAfter(timestamp2);
+        job.UpdatedAt.Should().BeAfter(timestamp2.Value);
 
         var timestamp3 = job.UpdatedAt;
         job.AddRequiredSkill("New Skill");
-        job.UpdatedAt.Should().BeAfter(timestamp3);
+        job.UpdatedAt.Should().BeAfter(timestamp3.Value);
     }
 }

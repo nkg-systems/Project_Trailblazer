@@ -1,0 +1,116 @@
+@* KPI Card Component for displaying key performance indicators *@
+
+<div class="card h-100 kpi-card @CssClass" @onclick="OnClick">
+    <div class="card-body d-flex align-items-center">
+        <div class="flex-shrink-0">
+            <div class="kpi-icon @IconColorClass">
+                <span class="oi @Icon" aria-hidden="true"></span>
+            </div>
+        </div>
+        <div class="flex-grow-1 ms-3">
+            <div class="kpi-value @ValueColorClass">@Value</div>
+            <div class="kpi-title">@Title</div>
+            @if (!string.IsNullOrEmpty(Subtitle))
+            {
+                <small class="text-muted kpi-subtitle">@Subtitle</small>
+            }
+        </div>
+        @if (ShowTrend && TrendPercentage.HasValue)
+        {
+            <div class="flex-shrink-0">
+                <div class="kpi-trend @TrendColorClass">
+                    <span class="oi @TrendIcon" aria-hidden="true"></span>
+                    <span class="ms-1">@($"{Math.Abs(TrendPercentage.Value):F1}%")</span>
+                </div>
+            </div>
+        }
+    </div>
+    @if (IsClickable)
+    {
+        <div class="card-footer text-center py-2">
+            <small class="text-muted">Click for details <span class="oi oi-chevron-right"></span></small>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Value { get; set; } = string.Empty;
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public string Icon { get; set; } = "oi-info";
+    [Parameter] public string IconColor { get; set; } = "primary";
+    [Parameter] public string ValueColor { get; set; } = "dark";
+    [Parameter] public string CssClass { get; set; } = string.Empty;
+    [Parameter] public bool IsClickable { get; set; } = false;
+    [Parameter] public bool ShowTrend { get; set; } = false;
+    [Parameter] public double? TrendPercentage { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private string IconColorClass => $"text-{IconColor}";
+    private string ValueColorClass => $"text-{ValueColor}";
+    
+    private string TrendColorClass => TrendPercentage >= 0 ? "text-success" : "text-danger";
+    private string TrendIcon => TrendPercentage >= 0 ? "oi-trending-up" : "oi-trending-down";
+}
+
+<style>
+    .kpi-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0,0,0,0.125);
+    }
+
+    .kpi-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+
+    .kpi-card.clickable {
+        cursor: pointer;
+    }
+
+    .kpi-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: rgba(var(--bs-primary-rgb), 0.1);
+        border-radius: 12px;
+    }
+
+    .kpi-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 0.25rem;
+    }
+
+    .kpi-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6c757d;
+        margin-bottom: 0.125rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .kpi-subtitle {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
+    .kpi-trend {
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .card-footer {
+        background-color: rgba(0,0,0,0.03);
+        border-top: 1px solid rgba(0,0,0,0.125);
+    }
+</style>
