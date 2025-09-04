@@ -92,7 +92,7 @@ public class RouteOptimizationController : ControllerBase
             }
 
             // Build optimization parameters
-            var parameters = new RouteOptimizationParameters
+            var parameters = new FieldOpsOptimizer.Application.Common.Interfaces.RouteOptimizationParameters
             {
                 Jobs = jobs,
                 Technician = technician,
@@ -208,7 +208,7 @@ public class RouteOptimizationController : ControllerBase
                 .Where(j => request.JobIds.Contains(j.Id))
                 .ToListAsync(cancellationToken);
 
-            var parameters = new RouteOptimizationParameters
+            var parameters = new FieldOpsOptimizer.Application.Common.Interfaces.RouteOptimizationParameters
             {
                 Jobs = jobs,
                 Technician = technician!,

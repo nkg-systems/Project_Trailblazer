@@ -47,15 +47,15 @@ public class ReportsController : ControllerBase
             var query = _context.ServiceJobs.AsQueryable();
             
             if (tenantId.HasValue)
-                query = query.Where(j => j.TenantId == tenantId.Value);
+                query = query.Where(j => j.TenantId == tenantId.Value.ToString());
 
             var jobs = await query
                 .Where(j => j.ScheduledDate >= dateStart && j.ScheduledDate <= dateEnd)
-                .Include(j => j.Technician)
+                .Include(j => j.AssignedTechnician)
                 .ToListAsync();
 
             var technicians = await _context.Technicians
-                .Where(t => !tenantId.HasValue || t.TenantId == tenantId.Value)
+                .Where(t => !tenantId.HasValue || t.TenantId == tenantId.Value.ToString())
                 .Include(t => t.ServiceJobs.Where(j => j.ScheduledDate >= dateStart && j.ScheduledDate <= dateEnd))
                 .ToListAsync();
 
@@ -65,34 +65,34 @@ public class ReportsController : ControllerBase
                 GeneratedAt = DateTime.UtcNow,
                 
                 // Job metrics
-                TotalJobs = jobs.Count,
-                CompletedJobs = jobs.Count(j => j.Status == ServiceJobStatus.Completed),
-                PendingJobs = jobs.Count(j => j.Status == ServiceJobStatus.Scheduled || j.Status == ServiceJobStatus.InProgress),
-                CancelledJobs = jobs.Count(j => j.Status == ServiceJobStatus.Cancelled),
+                TotalJobs = jobs.Count(),
+                CompletedJobs = jobs.Count(j => j.Status == JobStatus.Completed),
+                PendingJobs = jobs.Count(j => j.Status == JobStatus.Scheduled || j.Status == JobStatus.InProgress),
+                CancelledJobs = jobs.Count(j => j.Status == JobStatus.Cancelled),
                 
                 // Performance metrics
-                CompletionRate = jobs.Count > 0 ? (double)jobs.Count(j => j.Status == ServiceJobStatus.Completed) / jobs.Count * 100 : 0,
-                AverageJobDuration = jobs.Where(j => j.EstimatedDuration.HasValue).Average(j => j.EstimatedDuration!.Value.TotalHours),
+                CompletionRate = jobs.Count() > 0 ? (double)jobs.Count(j => j.Status == JobStatus.Completed) / jobs.Count() * 100 : 0,
+                AverageJobDuration = jobs.Any() ? jobs.Average(j => j.EstimatedDuration.TotalHours) : 0,
                 
                 // Technician metrics
                 ActiveTechnicians = technicians.Count(t => t.Status == TechnicianStatus.Active),
-                TotalTechnicians = technicians.Count,
+                TotalTechnicians = technicians.Count(),
                 AverageUtilizationRate = CalculateAverageUtilization(technicians, dateStart, dateEnd),
                 
                 // Revenue metrics (if costs are tracked)
-                TotalRevenue = jobs.Where(j => j.Status == ServiceJobStatus.Completed).Sum(j => j.ActualCost ?? 0),
-                AverageJobValue = jobs.Where(j => j.ActualCost.HasValue && j.Status == ServiceJobStatus.Completed).Average(j => j.ActualCost ?? 0),
+                TotalRevenue = jobs.Where(j => j.Status == JobStatus.Completed).Sum(j => j.EstimatedRevenue),
+                AverageJobValue = jobs.Where(j => j.Status == JobStatus.Completed).Any() ? jobs.Where(j => j.Status == JobStatus.Completed).Average(j => j.EstimatedRevenue) : 0,
                 
                 // Recent activity
                 RecentJobs = jobs.OrderByDescending(j => j.UpdatedAt).Take(5).Select(j => new RecentJobDto
                 {
                     JobId = j.Id,
                     JobNumber = j.JobNumber,
-                    Title = j.Title,
+                    Title = j.Description,
                     Status = j.Status.ToString(),
-                    TechnicianName = j.Technician?.Name ?? "Unassigned",
+                    TechnicianName = j.AssignedTechnician?.FullName ?? "Unassigned",
                     ScheduledDate = j.ScheduledDate,
-                    UpdatedAt = j.UpdatedAt
+                    UpdatedAt = j.UpdatedAt ?? DateTime.UtcNow
                 }).ToList()
             };
 
@@ -110,7 +110,7 @@ public class ReportsController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while generating dashboard data",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -139,28 +139,27 @@ public class ReportsController : ControllerBase
                 query = query.Where(t => t.Id == technicianId.Value);
 
             if (tenantId.HasValue)
-                query = query.Where(t => t.TenantId == tenantId.Value);
+                query = query.Where(t => t.TenantId == tenantId.Value.ToString());
 
             var technicians = await query.ToListAsync();
 
             var performance = technicians.Select(t => new TechnicianPerformanceDto
             {
                 TechnicianId = t.Id,
-                TechnicianName = t.Name,
+                TechnicianName = t.FullName,
                 EmployeeId = t.EmployeeId,
                 Status = t.Status.ToString(),
                 TotalJobs = t.ServiceJobs.Count,
-                CompletedJobs = t.ServiceJobs.Count(j => j.Status == ServiceJobStatus.Completed),
-                CancelledJobs = t.ServiceJobs.Count(j => j.Status == ServiceJobStatus.Cancelled),
+                CompletedJobs = t.ServiceJobs.Count(j => j.Status == JobStatus.Completed),
+                CancelledJobs = t.ServiceJobs.Count(j => j.Status == JobStatus.Cancelled),
                 CompletionRate = t.ServiceJobs.Count > 0 ? 
-                    (double)t.ServiceJobs.Count(j => j.Status == ServiceJobStatus.Completed) / t.ServiceJobs.Count * 100 : 0,
-                AverageJobDuration = t.ServiceJobs.Where(j => j.EstimatedDuration.HasValue)
-                    .Average(j => j.EstimatedDuration!.Value.TotalHours),
-                TotalRevenue = t.ServiceJobs.Where(j => j.Status == ServiceJobStatus.Completed)
-                    .Sum(j => j.ActualCost ?? 0),
+                    (double)t.ServiceJobs.Count(j => j.Status == JobStatus.Completed) / t.ServiceJobs.Count * 100 : 0,
+                AverageJobDuration = t.ServiceJobs.Any() ? t.ServiceJobs.Average(j => j.EstimatedDuration.TotalHours) : 0,
+                TotalRevenue = t.ServiceJobs.Where(j => j.Status == JobStatus.Completed)
+                    .Sum(j => j.EstimatedRevenue),
                 UtilizationRate = CalculateUtilizationRate(t, dateStart, dateEnd),
                 SkillsCount = t.Skills.Count,
-                BaseLocation = t.BaseLocation ?? "Not specified",
+                BaseLocation = t.HomeAddress?.FormattedAddress ?? "Not specified",
                 HourlyRate = t.HourlyRate
             }).ToList();
 
@@ -168,7 +167,7 @@ public class ReportsController : ControllerBase
             {
                 Success = true,
                 Data = performance,
-                Message = $"Retrieved performance data for {performance.Count} technicians"
+                Message = $"Retrieved performance data for {performance.Count()} technicians"
             });
         }
         catch (Exception ex)
@@ -178,7 +177,7 @@ public class ReportsController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while generating performance report",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -200,7 +199,7 @@ public class ReportsController : ControllerBase
             var query = _context.ServiceJobs.AsQueryable();
             
             if (tenantId.HasValue)
-                query = query.Where(j => j.TenantId == tenantId.Value);
+                query = query.Where(j => j.TenantId == tenantId.Value.ToString());
 
             var jobs = await query
                 .Where(j => j.ScheduledDate >= dateStart && j.ScheduledDate <= dateEnd)
@@ -212,7 +211,7 @@ public class ReportsController : ControllerBase
                 TotalJobs = jobs.Count,
                 
                 // Status distribution
-                StatusBreakdown = Enum.GetValues<ServiceJobStatus>()
+                StatusBreakdown = Enum.GetValues<JobStatus>()
                     .ToDictionary(s => s.ToString(), s => jobs.Count(j => j.Status == s)),
                 
                 // Priority distribution
@@ -221,18 +220,15 @@ public class ReportsController : ControllerBase
                 
                 // Job type distribution
                 JobTypeBreakdown = jobs.GroupBy(j => j.JobType)
-                    .ToDictionary(g => g.Key, g => g.Count()),
+                    .ToDictionary(g => g.Key.ToString(), g => g.Count()),
                 
                 // Duration analytics
-                AverageDuration = jobs.Where(j => j.EstimatedDuration.HasValue)
-                    .Average(j => j.EstimatedDuration!.Value.TotalHours),
-                MedianDuration = CalculateMedian(jobs.Where(j => j.EstimatedDuration.HasValue)
-                    .Select(j => j.EstimatedDuration!.Value.TotalHours)),
+                AverageDuration = jobs.Any() ? jobs.Average(j => j.EstimatedDuration.TotalHours) : 0,
+                MedianDuration = CalculateMedian(jobs.Select(j => j.EstimatedDuration.TotalHours)),
                 
                 // Cost analytics
-                TotalValue = jobs.Sum(j => j.EstimatedCost ?? 0),
-                AverageJobValue = jobs.Where(j => j.EstimatedCost.HasValue)
-                    .Average(j => j.EstimatedCost!.Value),
+                TotalValue = jobs.Sum(j => j.EstimatedCost),
+                AverageJobValue = jobs.Any() ? jobs.Average(j => j.EstimatedCost) : 0,
                 
                 // Daily trends
                 DailyTrends = jobs.GroupBy(j => j.ScheduledDate.Date)
@@ -241,8 +237,8 @@ public class ReportsController : ControllerBase
                     {
                         Date = g.Key,
                         JobCount = g.Count(),
-                        CompletedCount = g.Count(j => j.Status == ServiceJobStatus.Completed),
-                        Revenue = g.Where(j => j.Status == ServiceJobStatus.Completed).Sum(j => j.ActualCost ?? 0)
+                        CompletedCount = g.Count(j => j.Status == JobStatus.Completed),
+                        Revenue = g.Where(j => j.Status == JobStatus.Completed).Sum(j => j.EstimatedRevenue)
                     }).ToList(),
                 
                 // Geographic distribution
@@ -267,7 +263,7 @@ public class ReportsController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while generating job analytics",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -289,12 +285,12 @@ public class ReportsController : ControllerBase
             var query = _context.Routes.AsQueryable();
             
             if (tenantId.HasValue)
-                query = query.Where(r => r.TenantId == tenantId.Value);
+                query = query.Where(r => r.TenantId == tenantId.Value.ToString());
 
             var routes = await query
                 .Where(r => r.Date >= dateStart && r.Date <= dateEnd)
                 .Include(r => r.RouteStops)
-                .Include(r => r.Technician)
+                .Include(r => r.AssignedTechnician)
                 .ToListAsync();
 
             var report = new RouteOptimizationReportDto
@@ -302,20 +298,20 @@ public class ReportsController : ControllerBase
                 ReportPeriod = $"{dateStart:yyyy-MM-dd} to {dateEnd:yyyy-MM-dd}",
                 TotalRoutes = routes.Count,
                 OptimizedRoutes = routes.Count(r => r.IsOptimized),
-                AverageTravelTime = routes.Average(r => r.TotalTravelTime?.TotalHours ?? 0),
-                AverageDistance = routes.Average(r => r.TotalDistance ?? 0),
-                TotalFuelSavings = routes.Sum(r => r.EstimatedFuelSavings ?? 0),
-                TotalTimeSavings = routes.Sum(r => r.EstimatedTimeSavings?.TotalHours ?? 0),
+                AverageTravelTime = routes.Any() ? routes.Average(r => r.TotalTravelTime.TotalHours) : 0,
+                AverageDistance = routes.Any() ? routes.Average(r => r.TotalDistance) : 0,
+                TotalFuelSavings = (decimal)routes.Sum(r => r.EstimatedFuelSavings),
+                TotalTimeSavings = routes.Sum(r => r.EstimatedTimeSavings.TotalHours),
                 
                 // Algorithm effectiveness
-                AlgorithmBreakdown = routes.Where(r => !string.IsNullOrEmpty(r.OptimizationAlgorithm))
-                    .GroupBy(r => r.OptimizationAlgorithm!)
+                AlgorithmBreakdown = routes.Where(r => r.OptimizationAlgorithm.HasValue)
+                    .GroupBy(r => r.OptimizationAlgorithm!.Value.ToString())
                     .ToDictionary(g => g.Key, g => new AlgorithmStatsDto
                     {
                         Count = g.Count(),
-                        AverageTravelTime = g.Average(r => r.TotalTravelTime?.TotalHours ?? 0),
-                        AverageDistance = g.Average(r => r.TotalDistance ?? 0),
-                        AverageSavings = g.Average(r => r.EstimatedTimeSavings?.TotalHours ?? 0)
+                        AverageTravelTime = g.Any() ? g.Average(r => r.TotalTravelTime.TotalHours) : 0,
+                        AverageDistance = g.Any() ? g.Average(r => r.TotalDistance) : 0,
+                        AverageSavings = g.Any() ? g.Average(r => r.EstimatedTimeSavings.TotalHours) : 0
                     }),
                 
                 // Daily optimization trends
@@ -326,21 +322,21 @@ public class ReportsController : ControllerBase
                         Date = g.Key,
                         RoutesCreated = g.Count(),
                         RoutesOptimized = g.Count(r => r.IsOptimized),
-                        AverageTravelTime = g.Average(r => r.TotalTravelTime?.TotalHours ?? 0),
-                        TotalSavings = g.Sum(r => r.EstimatedTimeSavings?.TotalHours ?? 0)
+                        AverageTravelTime = g.Any() ? g.Average(r => r.TotalTravelTime.TotalHours) : 0,
+                        TotalSavings = g.Sum(r => r.EstimatedTimeSavings.TotalHours)
                     }).ToList(),
                 
                 // Technician route performance
-                TechnicianRouteStats = routes.GroupBy(r => r.TechnicianId)
-                    .Where(g => g.Key.HasValue)
+                TechnicianRouteStats = routes.GroupBy(r => r.AssignedTechnicianId)
+                    .Where(g => g.Key != Guid.Empty)
                     .Select(g => new TechnicianRouteStatsDto
                     {
-                        TechnicianId = g.Key!.Value,
-                        TechnicianName = g.First().Technician?.Name ?? "Unknown",
+                        TechnicianId = g.Key,
+                        TechnicianName = g.First().AssignedTechnician?.FullName ?? "Unknown",
                         TotalRoutes = g.Count(),
                         OptimizedRoutes = g.Count(r => r.IsOptimized),
-                        AverageTravelTime = g.Average(r => r.TotalTravelTime?.TotalHours ?? 0),
-                        TotalSavings = g.Sum(r => r.EstimatedTimeSavings?.TotalHours ?? 0)
+                        AverageTravelTime = g.Any() ? g.Average(r => r.TotalTravelTime.TotalHours) : 0,
+                        TotalSavings = g.Sum(r => r.EstimatedTimeSavings.TotalHours)
                     }).ToList()
             };
 
@@ -358,7 +354,7 @@ public class ReportsController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while generating route optimization report",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -417,7 +413,7 @@ public class ReportsController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while exporting the report",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -439,7 +435,7 @@ public class ReportsController : ControllerBase
 
         var scheduledHours = technician.ServiceJobs
             .Where(j => j.ScheduledDate >= startDate && j.ScheduledDate <= endDate)
-            .Sum(j => j.EstimatedDuration?.TotalHours ?? 0);
+            .Sum(j => j.EstimatedDuration.TotalHours);
 
         return Math.Min(100, (scheduledHours / totalWorkingHours) * 100);
     }
@@ -482,11 +478,11 @@ public class ReportsController : ControllerBase
     private async Task<string> GenerateJobsCsv(DateTime startDate, DateTime endDate, Guid? tenantId)
     {
         var query = _context.ServiceJobs
-            .Include(j => j.Technician)
+            .Include(j => j.AssignedTechnician)
             .Where(j => j.ScheduledDate >= startDate && j.ScheduledDate <= endDate);
 
         if (tenantId.HasValue)
-            query = query.Where(j => j.TenantId == tenantId.Value);
+            query = query.Where(j => j.TenantId == tenantId.Value.ToString());
 
         var jobs = await query.ToListAsync();
 
@@ -496,17 +492,17 @@ public class ReportsController : ControllerBase
         foreach (var job in jobs)
         {
             csv.AppendLine($"{job.JobNumber}," +
-                         $"\"{job.Title}\"," +
+                         $"\"{job.Description}\"," +
                          $"{job.Status}," +
                          $"{job.Priority}," +
                          $"{job.JobType}," +
                          $"{job.ScheduledDate:yyyy-MM-dd HH:mm}," +
-                         $"{job.EstimatedDuration?.TotalHours ?? 0}," +
-                         $"{job.ActualDuration?.TotalHours ?? 0}," +
-                         $"\"{job.Technician?.Name ?? "Unassigned"}\"," +
+                         $"{job.EstimatedDuration.TotalHours}," +
+                         $"0," +
+                         $"\"{job.AssignedTechnician?.FullName ?? "Unassigned"}\"," +
                          $"\"{job.CustomerName}\"," +
-                         $"{job.EstimatedCost ?? 0}," +
-                         $"{job.ActualCost ?? 0}," +
+                         $"{job.EstimatedCost}," +
+                         $"{job.EstimatedRevenue}," +
                          $"\"{job.ServiceAddress.City}\"," +
                          $"{job.CreatedAt:yyyy-MM-dd HH:mm}");
         }
@@ -517,10 +513,11 @@ public class ReportsController : ControllerBase
     private async Task<string> GenerateTechniciansCsv(DateTime startDate, DateTime endDate, Guid? tenantId)
     {
         var query = _context.Technicians
-            .Include(t => t.ServiceJobs.Where(j => j.ScheduledDate >= startDate && j.ScheduledDate <= endDate));
+            .Include(t => t.ServiceJobs.Where(j => j.ScheduledDate >= startDate && j.ScheduledDate <= endDate))
+            .AsQueryable();
 
         if (tenantId.HasValue)
-            query = query.Where(t => t.TenantId == tenantId.Value);
+            query = query.Where(t => t.TenantId == tenantId.Value.ToString());
 
         var technicians = await query.ToListAsync();
 
@@ -530,18 +527,18 @@ public class ReportsController : ControllerBase
         foreach (var tech in technicians)
         {
             var completionRate = tech.ServiceJobs.Count > 0 ? 
-                (double)tech.ServiceJobs.Count(j => j.Status == ServiceJobStatus.Completed) / tech.ServiceJobs.Count * 100 : 0;
-            var totalRevenue = tech.ServiceJobs.Where(j => j.Status == ServiceJobStatus.Completed).Sum(j => j.ActualCost ?? 0);
+                (double)tech.ServiceJobs.Count(j => j.Status == JobStatus.Completed) / tech.ServiceJobs.Count * 100 : 0;
+            var totalRevenue = tech.ServiceJobs.Where(j => j.Status == JobStatus.Completed).Sum(j => j.EstimatedRevenue);
             var utilizationRate = CalculateUtilizationRate(tech, startDate, endDate);
 
             csv.AppendLine($"{tech.EmployeeId}," +
-                         $"\"{tech.Name}\"," +
+                         $"\"{tech.FullName}\"," +
                          $"{tech.Email}," +
                          $"{tech.Status}," +
-                         $"\"{tech.BaseLocation ?? ""}\"," +
+                         $"\"{tech.HomeAddress?.FormattedAddress ?? ""}\"," +
                          $"{tech.HourlyRate}," +
                          $"{tech.ServiceJobs.Count}," +
-                         $"{tech.ServiceJobs.Count(j => j.Status == ServiceJobStatus.Completed)}," +
+                         $"{tech.ServiceJobs.Count(j => j.Status == JobStatus.Completed)}," +
                          $"{completionRate:F2}," +
                          $"{totalRevenue}," +
                          $"{utilizationRate:F2}");
@@ -553,11 +550,11 @@ public class ReportsController : ControllerBase
     private async Task<string> GenerateRoutesCsv(DateTime startDate, DateTime endDate, Guid? tenantId)
     {
         var query = _context.Routes
-            .Include(r => r.Technician)
+            .Include(r => r.AssignedTechnician)
             .Where(r => r.Date >= startDate && r.Date <= endDate);
 
         if (tenantId.HasValue)
-            query = query.Where(r => r.TenantId == tenantId.Value);
+            query = query.Where(r => r.TenantId == tenantId.Value.ToString());
 
         var routes = await query.ToListAsync();
 
@@ -566,15 +563,15 @@ public class ReportsController : ControllerBase
 
         foreach (var route in routes)
         {
-            csv.AppendLine($"\"{route.RouteName}\"," +
+            csv.AppendLine($"\"{route.Name}\"," +
                          $"{route.Date:yyyy-MM-dd}," +
-                         $"\"{route.Technician?.Name ?? "Unassigned"}\"," +
-                         $"{route.TotalDistance ?? 0}," +
-                         $"{route.TotalTravelTime?.TotalHours ?? 0}," +
+                         $"\"{route.AssignedTechnician?.FullName ?? "Unassigned"}\"," +
+                         $"{route.TotalDistance}," +
+                         $"{route.TotalTravelTime.TotalHours}," +
                          $"{route.IsOptimized}," +
-                         $"\"{route.OptimizationAlgorithm ?? ""}\"," +
-                         $"{route.EstimatedTimeSavings?.TotalHours ?? 0}," +
-                         $"{route.EstimatedFuelSavings ?? 0}," +
+                         $"\"{route.OptimizationAlgorithm?.ToString() ?? ""}\"," +
+                         $"{route.EstimatedTimeSavings.TotalHours}," +
+                         $"{route.EstimatedFuelSavings}," +
                          $"{route.RouteStops.Count}");
         }
 

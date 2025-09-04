@@ -48,7 +48,6 @@ public class ScheduleController : ControllerBase
         {
             var query = _context.Technicians
                 .Include(t => t.ServiceJobs)
-                .Include(t => t.WorkingHours)
                 .AsQueryable();
 
             // Apply filters
@@ -59,8 +58,8 @@ public class ScheduleController : ControllerBase
                 query = query.Where(t => t.Status == status.Value);
 
             if (!string.IsNullOrWhiteSpace(location))
-                query = query.Where(t => t.BaseLocation != null && 
-                    EF.Functions.ILike(t.BaseLocation, $"%{location}%"));
+                query = query.Where(t => t.HomeAddress != null && 
+                    EF.Functions.ILike(t.HomeAddress.FormattedAddress, $"%{location}%"));
 
             // Filter by scheduled jobs within date range
             if (startDate.HasValue || endDate.HasValue)
@@ -73,9 +72,9 @@ public class ScheduleController : ControllerBase
             // Apply sorting
             query = sortBy?.ToLowerInvariant() switch
             {
-                "name" => sortDescending ? query.OrderByDescending(t => t.Name) : query.OrderBy(t => t.Name),
+                "name" => sortDescending ? query.OrderByDescending(t => t.FullName) : query.OrderBy(t => t.FullName),
                 "status" => sortDescending ? query.OrderByDescending(t => t.Status) : query.OrderBy(t => t.Status),
-                "location" => sortDescending ? query.OrderByDescending(t => t.BaseLocation) : query.OrderBy(t => t.BaseLocation),
+                "location" => sortDescending ? query.OrderByDescending(t => t.HomeAddress.FormattedAddress) : query.OrderBy(t => t.HomeAddress.FormattedAddress),
                 _ => sortDescending ? query.OrderByDescending(t => t.UpdatedAt) : query.OrderBy(t => t.UpdatedAt)
             };
 
@@ -92,8 +91,7 @@ public class ScheduleController : ControllerBase
                 Items = technicianDtos,
                 TotalCount = totalCount,
                 Page = page,
-                PageSize = pageSize,
-                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+                PageSize = pageSize
             };
 
             return Ok(new ApiResponse<PagedResult<TechnicianDto>>
@@ -110,7 +108,7 @@ public class ScheduleController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while retrieving schedules",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -130,8 +128,6 @@ public class ScheduleController : ControllerBase
                 .Include(t => t.ServiceJobs.Where(j => 
                     (!startDate.HasValue || j.ScheduledDate >= startDate.Value) &&
                     (!endDate.HasValue || j.ScheduledDate <= endDate.Value)))
-                .ThenInclude(j => j.Customer)
-                .Include(t => t.WorkingHours)
                 .FirstOrDefaultAsync(t => t.Id == technicianId);
 
             if (technician == null)
@@ -159,7 +155,7 @@ public class ScheduleController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while retrieving the technician schedule",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -180,7 +176,6 @@ public class ScheduleController : ControllerBase
                 .Include(t => t.ServiceJobs.Where(j => 
                     j.ScheduledDate >= startDate && j.ScheduledDate <= endDate &&
                     j.Status != JobStatus.Cancelled))
-                .Include(t => t.WorkingHours)
                 .FirstOrDefaultAsync(t => t.Id == technicianId);
 
             if (technician == null)
@@ -208,7 +203,7 @@ public class ScheduleController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while calculating availability",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -224,7 +219,6 @@ public class ScheduleController : ControllerBase
         try
         {
             var technician = await _context.Technicians
-                .Include(t => t.WorkingHours)
                 .FirstOrDefaultAsync(t => t.Id == technicianId);
 
             if (technician == null)
@@ -236,25 +230,24 @@ public class ScheduleController : ControllerBase
                 });
             }
 
-            // Remove existing working hours
-            _context.WorkingHours.RemoveRange(technician.WorkingHours);
-
-            // Add new working hours
-            var newWorkingHours = workingHoursUpdates.Select(wh => new WorkingHours
+            // Create new working hours and set them on the technician
+            var newWorkingHours = workingHoursUpdates.Select(wh => new WorkingHours(
+                wh.DayOfWeek, 
+                wh.StartTime, 
+                wh.EndTime, 
+                technicianId)
             {
-                Id = Guid.NewGuid(),
-                TechnicianId = technicianId,
-                DayOfWeek = wh.DayOfWeek,
-                StartTime = wh.StartTime,
-                EndTime = wh.EndTime,
-                IsAvailable = wh.IsAvailable,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                
             }).ToList();
 
-            await _context.WorkingHours.AddRangeAsync(newWorkingHours);
-            
-            technician.UpdatedAt = DateTime.UtcNow;
+            // Set availability for each working hour
+            foreach (var (workingHour, update) in newWorkingHours.Zip(workingHoursUpdates))
+            {
+                workingHour.SetAvailability(update.IsAvailable);
+            }
+
+            // Set the working hours on the technician (this will update the JSON field)
+            technician.SetWorkingHours(newWorkingHours);
             await _context.SaveChangesAsync();
 
             var workingHoursDtos = _mapper.Map<List<WorkingHoursDto>>(newWorkingHours);
@@ -273,7 +266,7 @@ public class ScheduleController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while updating working hours",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -296,7 +289,6 @@ public class ScheduleController : ControllerBase
                 .Include(t => t.ServiceJobs.Where(j => 
                     j.ScheduledDate >= dateStart && j.ScheduledDate <= dateEnd &&
                     j.Status != JobStatus.Cancelled))
-                .Include(t => t.WorkingHours)
                 .FirstOrDefaultAsync(t => t.Id == technicianId);
 
             if (technician == null)
@@ -324,7 +316,7 @@ public class ScheduleController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while detecting conflicts",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -354,12 +346,12 @@ public class ScheduleController : ControllerBase
             var summaries = technicians.Select(t => new TechnicianScheduleSummaryDto
             {
                 TechnicianId = t.Id,
-                TechnicianName = t.Name,
+                TechnicianName = t.FullName,
                 TotalJobs = t.ServiceJobs.Count,
-                CompletedJobs = t.ServiceJobs.Count(j => j.Status == ServiceJobStatus.Completed),
-                PendingJobs = t.ServiceJobs.Count(j => j.Status == ServiceJobStatus.Scheduled || j.Status == ServiceJobStatus.InProgress),
-                CancelledJobs = t.ServiceJobs.Count(j => j.Status == ServiceJobStatus.Cancelled),
-                TotalEstimatedHours = t.ServiceJobs.Sum(j => j.EstimatedDuration?.TotalHours ?? 0),
+                CompletedJobs = t.ServiceJobs.Count(j => j.Status == JobStatus.Completed),
+                PendingJobs = t.ServiceJobs.Count(j => j.Status == JobStatus.Scheduled || j.Status == JobStatus.InProgress),
+                CancelledJobs = t.ServiceJobs.Count(j => j.Status == JobStatus.Cancelled),
+                TotalEstimatedHours = t.ServiceJobs.Sum(j => j.EstimatedDuration.TotalHours),
                 UtilizationRate = CalculateUtilizationRate(t, request.StartDate, request.EndDate)
             }).ToList();
 
@@ -377,7 +369,7 @@ public class ScheduleController : ControllerBase
             {
                 Success = false,
                 Message = "An error occurred while generating schedule summary",
-                Errors = new[] { ex.Message }
+                Errors = new List<string> { ex.Message }
             });
         }
     }
@@ -426,7 +418,7 @@ public class ScheduleController : ControllerBase
                     }
 
                     // Skip the time occupied by this job
-                    var jobEndTime = job.ScheduledDate.Add(job.EstimatedDuration ?? TimeSpan.FromHours(1));
+                    var jobEndTime = job.ScheduledDate.Add(job.EstimatedDuration);
                     currentTime = jobEndTime;
                 }
 
@@ -467,7 +459,7 @@ public class ScheduleController : ControllerBase
             var currentJob = jobs[i];
             var nextJob = jobs[i + 1];
             
-            var currentJobEnd = currentJob.ScheduledDate.Add(currentJob.EstimatedDuration ?? TimeSpan.FromHours(1));
+            var currentJobEnd = currentJob.ScheduledDate.Add(currentJob.EstimatedDuration);
             
             if (currentJobEnd > nextJob.ScheduledDate)
             {
@@ -505,7 +497,7 @@ public class ScheduleController : ControllerBase
             else
             {
                 var jobTime = job.ScheduledDate.TimeOfDay;
-                var jobEndTime = jobTime.Add(job.EstimatedDuration ?? TimeSpan.FromHours(1));
+                var jobEndTime = jobTime.Add(job.EstimatedDuration);
 
                 if (jobTime < workingHours.StartTime || jobEndTime > workingHours.EndTime)
                 {
@@ -531,7 +523,7 @@ public class ScheduleController : ControllerBase
 
         var scheduledHours = technician.ServiceJobs
             .Where(j => j.ScheduledDate >= startDate && j.ScheduledDate <= endDate)
-            .Sum(j => j.EstimatedDuration?.TotalHours ?? 0);
+            .Sum(j => j.EstimatedDuration.TotalHours);
 
         return Math.Min(100, (scheduledHours / totalWorkingHours) * 100);
     }

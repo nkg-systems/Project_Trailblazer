@@ -234,7 +234,7 @@ public class WeatherController : ControllerBase
                 {
                     Success = false,
                     Message = "Invalid request data",
-                    Errors = ModelState.SelectMany(x => x.Value?.Errors ?? new List<Microsoft.AspNetCore.Mvc.ModelBinding.ModelError>())
+                    Errors = ModelState.SelectMany(x => x.Value?.Errors ?? new Microsoft.AspNetCore.Mvc.ModelBinding.ModelErrorCollection())
                                       .Select(e => e.ErrorMessage)
                                       .ToList()
                 });
@@ -296,7 +296,7 @@ public class WeatherController : ControllerBase
                 {
                     Success = false,
                     Message = "Invalid request data",
-                    Errors = ModelState.SelectMany(x => x.Value?.Errors ?? new List<Microsoft.AspNetCore.Mvc.ModelBinding.ModelError>())
+                    Errors = ModelState.SelectMany(x => x.Value?.Errors ?? new Microsoft.AspNetCore.Mvc.ModelBinding.ModelErrorCollection())
                                       .Select(e => e.ErrorMessage)
                                       .ToList()
                 });
@@ -349,7 +349,7 @@ public class WeatherController : ControllerBase
                 {
                     Success = false,
                     Message = "Invalid request data",
-                    Errors = ModelState.SelectMany(x => x.Value?.Errors ?? new List<Microsoft.AspNetCore.Mvc.ModelBinding.ModelError>())
+                    Errors = ModelState.SelectMany(x => x.Value?.Errors ?? new Microsoft.AspNetCore.Mvc.ModelBinding.ModelErrorCollection())
                                       .Select(e => e.ErrorMessage)
                                       .ToList()
                 });
@@ -403,7 +403,7 @@ public class WeatherController : ControllerBase
 
     #region Private Helper Methods
 
-    private static WeatherForecastDto MapWeatherForecastToDto(WeatherForecast weather)
+    private static WeatherForecastDto MapWeatherForecastToDto(FieldOpsOptimizer.Application.Common.Interfaces.WeatherForecast weather)
     {
         return new WeatherForecastDto
         {

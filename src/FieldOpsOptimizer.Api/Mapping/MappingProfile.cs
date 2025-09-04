@@ -39,7 +39,7 @@ public class MappingProfile : Profile
         CreateMap<FieldOpsOptimizer.Domain.Entities.Route, RouteDto>()
             .ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Name))
             .ForMember(dest => dest.TechnicianId, opt => opt.MapFrom(src => src.AssignedTechnicianId))
-            .ForMember(dest => dest.RouteDate, opt => opt.MapFrom(src => src.ScheduledDate))
+            .ForMember(dest => dest.RouteDate, opt => opt.MapFrom(src => src.Date))
             .ForMember(dest => dest.Stops, opt => opt.MapFrom(src => src.RouteStops.OrderBy(rs => rs.SequenceOrder).ToList()));
             
         CreateMap<RouteStop, RouteStopDto>()
@@ -51,7 +51,7 @@ public class MappingProfile : Profile
         // Value Object mappings
         CreateMap<Address, AddressDto>();
         CreateMap<AddressDto, Address>()
-            .ConstructUsing(src => new Address(src.Street, src.City, src.State, src.ZipCode, src.Country));
+            .ConstructUsing(src => new Address(src.Street, null, src.City, src.State, src.ZipCode, src.Country ?? "US", null));
             
         CreateMap<Coordinate, CoordinateDto>();
         CreateMap<CoordinateDto, Coordinate>()
@@ -59,6 +59,6 @@ public class MappingProfile : Profile
             
         CreateMap<WorkingHours, WorkingHoursDto>();
         CreateMap<WorkingHoursDto, WorkingHours>()
-            .ConstructUsing(src => new WorkingHours(src.DayOfWeek, src.StartTime, src.EndTime));
+            .ConstructUsing(src => new WorkingHours(src.DayOfWeek, src.StartTime, src.EndTime, null));
     }
 }
