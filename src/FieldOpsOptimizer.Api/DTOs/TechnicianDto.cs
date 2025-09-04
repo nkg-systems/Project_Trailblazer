@@ -9,6 +9,7 @@ public class TechnicianDto
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
+    public string Name => FullName; // Alias for API compatibility
     public string Email { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public TechnicianStatus Status { get; set; }
@@ -16,6 +17,7 @@ public class TechnicianDto
     public List<string> Skills { get; set; } = new();
     public AddressDto? HomeAddress { get; set; }
     public CoordinateDto? CurrentLocation { get; set; }
+    public CoordinateDto? BaseLocation => CurrentLocation ?? (HomeAddress != null ? new CoordinateDto() : null); // Alias for API compatibility
     public DateTime? LastLocationUpdate { get; set; }
     public List<WorkingHoursDto> WorkingHours { get; set; } = new();
     public DateTime CreatedAt { get; set; }

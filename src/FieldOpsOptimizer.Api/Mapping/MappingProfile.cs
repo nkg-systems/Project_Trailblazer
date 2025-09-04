@@ -28,24 +28,25 @@ public class MappingProfile : Profile
 
         // Service Job mappings
         CreateMap<ServiceJob, ServiceJobDto>()
-            .ForMember(dest => dest.RequiredSkills, opt => opt.MapFrom(src => src.RequiredSkills.ToList()));
+            .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Description))
+            .ForMember(dest => dest.JobType, opt => opt.MapFrom(src => src.JobType.ToString()))
+            .ForMember(dest => dest.RequiredSkills, opt => opt.MapFrom(src => src.RequiredSkills.ToList()))
+            .ForMember(dest => dest.AssignedTechnician, opt => opt.MapFrom(src => src.AssignedTechnician));
             
-        CreateMap<CreateServiceJobDto, ServiceJob>()
-            .ConstructUsing(src => new ServiceJob(
-                src.JobNumber ?? Guid.NewGuid().ToString(),
-                src.CustomerName,
-                new Address(src.ServiceAddress.Street, src.ServiceAddress.City, src.ServiceAddress.State, src.ServiceAddress.ZipCode, src.ServiceAddress.Country),
-                src.Description,
-                src.ScheduledDate,
-                src.EstimatedDuration,
-                src.TenantId,
-                src.Priority));
+        CreateMap<CreateServiceJobDto, ServiceJob>();
 
         // Route mappings
         CreateMap<FieldOpsOptimizer.Domain.Entities.Route, RouteDto>()
-            .ForMember(dest => dest.Stops, opt => opt.MapFrom(src => src.RouteStops.OrderBy(rs => rs.StopOrder).ToList()));
+            .ForMember(dest => dest.RouteName, opt => opt.MapFrom(src => src.Name))
+            .ForMember(dest => dest.TechnicianId, opt => opt.MapFrom(src => src.AssignedTechnicianId))
+            .ForMember(dest => dest.RouteDate, opt => opt.MapFrom(src => src.ScheduledDate))
+            .ForMember(dest => dest.Stops, opt => opt.MapFrom(src => src.RouteStops.OrderBy(rs => rs.SequenceOrder).ToList()));
             
-        CreateMap<RouteStop, RouteStopDto>();
+        CreateMap<RouteStop, RouteStopDto>()
+            .ForMember(dest => dest.StopOrder, opt => opt.MapFrom(src => src.SequenceOrder))
+            .ForMember(dest => dest.ServiceJobId, opt => opt.MapFrom(src => src.JobId))
+            .ForMember(dest => dest.DistanceFromPrevious, opt => opt.MapFrom(src => src.DistanceFromPreviousKm))
+            .ForMember(dest => dest.TravelTimeFromPrevious, opt => opt.MapFrom(src => src.EstimatedTravelTime));
 
         // Value Object mappings
         CreateMap<Address, AddressDto>();

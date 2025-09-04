@@ -6,6 +6,7 @@ public class RouteDto
 {
     public Guid Id { get; set; }
     public string RouteName { get; set; } = string.Empty;
+    public string Name => RouteName; // Alias for API compatibility
     public Guid TechnicianId { get; set; }
     public TechnicianDto? Technician { get; set; }
     public DateTime RouteDate { get; set; }

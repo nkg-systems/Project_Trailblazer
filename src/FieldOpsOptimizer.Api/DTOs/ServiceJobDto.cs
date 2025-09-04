@@ -32,6 +32,7 @@ public class ServiceJobDto
 
 public class CreateServiceJobDto
 {
+    public string? JobNumber { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public JobPriority Priority { get; set; }
