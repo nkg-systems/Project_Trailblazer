@@ -1,6 +1,6 @@
 # Field Operations Optimizer
 
-A comprehensive .NET 9/C# field operations optimizer that ingests open routing/traffic data, free weather APIs, and webhook/CSV job feeds to auto-schedule technicians, predict ETAs, cluster routes, and reduce idle miles for service SMBs.
+A comprehensive .NET 7/C# field operations optimizer that ingests open routing/traffic data, free weather APIs, and webhook/CSV job feeds to auto-schedule technicians, predict ETAs, cluster routes, and reduce idle miles for service SMBs.
 
 ## 🚀 Features
 
@@ -137,20 +137,26 @@ After starting the services:
 - [x] Repository pattern implementation
 - [x] Docker Compose infrastructure setup
 - [x] Basic CRUD operations for technicians
+- [x] ASP.NET Core API implementation
+- [x] GUI Dashboard implementation
+- [x] Weather Map Service Integration
+- [x] Route optimization engine
+- [x] Database health checks
+- [x] Logging and monitoring infrastructure
 
 ### In Progress 🚧
-- [ ] External service integrations (OSRM, Open-Meteo)
-- [ ] Route optimization engine
-- [ ] ASP.NET Core API implementation
-- [ ] Blazor WASM frontend
+- [ ] External service integrations (OSRM, Open-Meteo) - Partially completed
+- [ ] Blazor WASM frontend enhancements
 - [ ] Authentication & authorization
+- [ ] Advanced route optimization features
 
 ### Planned 📋
-- [ ] Background job processing
-- [ ] ML.NET forecasting
+- [ ] Background job processing with Hangfire
+- [ ] ML.NET forecasting implementation
 - [ ] SignalR real-time updates
-- [ ] Observability stack integration
-- [ ] Load testing & benchmarks
+- [ ] Complete observability stack integration
+- [ ] Load testing & performance benchmarks
+- [ ] Multi-tenant support implementation
 
 ## 🧪 Testing
 
@@ -158,6 +164,16 @@ After starting the services:
 ```bash
 dotnet test tests/FieldOpsOptimizer.Domain.Tests
 dotnet test tests/FieldOpsOptimizer.Application.Tests
+```
+
+### Integration Tests
+```bash
+dotnet test tests/FieldOpsOptimizer.Api.Tests
+```
+
+### Run All Tests
+```bash
+dotnet test
 ```
 
 ## 📁 Project Structure
@@ -172,8 +188,9 @@ src/
 └── FieldOpsOptimizer.Simulator/       # Demo data generation
 
 tests/
-├── FieldOpsOptimizer.Domain.Tests/    # Domain unit tests
-└── FieldOpsOptimizer.Application.Tests/ # Application unit tests
+├── FieldOpsOptimizer.Domain.Tests/      # Domain unit tests
+├── FieldOpsOptimizer.Application.Tests/ # Application unit tests
+└── FieldOpsOptimizer.Api.Tests/        # API integration tests
 
 infrastructure/
 ├── prometheus/                        # Prometheus configuration
@@ -181,4 +198,3 @@ infrastructure/
 ├── osrm/                            # OSRM routing data
 └── postgres/                        # Database initialization
 ```
-Cross-Platform Process Capture &amp; Action Studio
