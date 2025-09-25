@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "jINjpoUVExbFT+kKhyN80da9Gecxctf/qj1mCC3ns9jDMv/vl4BjJHBcjj5U0breMjTelGjm3kZIZOHgbLzaIA==",
+  "dgSpecHash": "0PO8LAm1QUSKxqDHsqUtabXCrBy+cNGFwpsJ8pWUDGWQ/Xdgq8wnA8faAbSDtEleisfMvtNNrUuNcMtVfF3KkQ==",
   "success": true,
-  "projectFilePath": "E:\\GIT\\Project_Trailblazer\\tests\\FieldOpsOptimizer.Application.Tests\\FieldOpsOptimizer.Application.Tests.csproj",
+  "projectFilePath": "E:\\Git\\Project_Trailblazer\\tests\\FieldOpsOptimizer.Application.Tests\\FieldOpsOptimizer.Application.Tests.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Greywater\\.nuget\\packages\\autofixture\\4.18.0\\autofixture.4.18.0.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\autofixture.xunit2\\4.18.0\\autofixture.xunit2.4.18.0.nupkg.sha512",
@@ -15,6 +15,8 @@
     "C:\\Users\\Greywater\\.nuget\\packages\\fluentvalidation\\11.9.2\\fluentvalidation.11.9.2.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\mediatr\\13.0.0\\mediatr.13.0.0.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\mediatr.contracts\\2.0.1\\mediatr.contracts.2.0.1.nupkg.sha512",
+    "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.aspnetcore.http.abstractions\\2.2.0\\microsoft.aspnetcore.http.abstractions.2.2.0.nupkg.sha512",
+    "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.aspnetcore.http.features\\2.2.0\\microsoft.aspnetcore.http.features.2.2.0.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\8.0.0\\microsoft.bcl.asyncinterfaces.8.0.0.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.bcl.timeprovider\\8.0.0\\microsoft.bcl.timeprovider.8.0.0.nupkg.sha512",
     "C:\\Users\\Greywater\\.nuget\\packages\\microsoft.codecoverage\\17.8.0\\microsoft.codecoverage.17.8.0.nupkg.sha512",

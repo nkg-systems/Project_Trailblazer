@@ -80,12 +80,84 @@ public class TechnicianConfiguration : IEntityTypeConfiguration<Technician>
             coord.Property(c => c.Longitude).HasPrecision(10, 7);
         });
 
+        // Enhanced Availability Properties
+        builder.Property(t => t.IsCurrentlyAvailable)
+            .IsRequired()
+            .HasDefaultValue(true)
+            .HasComment("Whether the technician is currently available for new job assignments");
+
+        builder.Property(t => t.AvailabilityChangedAt)
+            .HasComment("When the technician's availability status was last changed");
+
+        builder.Property(t => t.AvailabilityChangedByUserId)
+            .HasComment("User ID who last changed the technician's availability");
+
+        builder.Property(t => t.AvailabilityChangedByUserName)
+            .HasMaxLength(200)
+            .HasComment("Name of user who last changed the technician's availability");
+
+        builder.Property(t => t.UnavailabilityReason)
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .HasComment("Reason for current unavailability (if applicable)");
+
+        builder.Property(t => t.AvailabilityNotes)
+            .HasMaxLength(500)
+            .HasComment("Additional notes about current availability status");
+
+        builder.Property(t => t.ExpectedAvailableAt)
+            .HasComment("Expected time when technician will be available again (if currently unavailable)");
+
+        builder.Property(t => t.CanTakeEmergencyJobs)
+            .IsRequired()
+            .HasDefaultValue(true)
+            .HasComment("Whether the technician can be assigned emergency jobs even when unavailable");
+
+        builder.Property(t => t.MaxConcurrentJobs)
+            .IsRequired()
+            .HasDefaultValue(3)
+            .HasComment("Maximum number of concurrent jobs this technician can handle");
+
+        builder.Property(t => t.RowVersion)
+            .IsRequired()
+            .IsRowVersion()
+            .HasComment("Row version for optimistic concurrency control");
+
         // Indexes
         builder.HasIndex(t => new { t.EmployeeId, t.TenantId })
-            .IsUnique();
+            .IsUnique()
+            .HasDatabaseName("IX_Technicians_EmployeeId_TenantId_Unique");
 
-        builder.HasIndex(t => t.TenantId);
-        builder.HasIndex(t => t.Email);
-        builder.HasIndex(t => t.Status);
+        builder.HasIndex(t => t.TenantId)
+            .HasDatabaseName("IX_Technicians_TenantId");
+
+        builder.HasIndex(t => t.Email)
+            .HasDatabaseName("IX_Technicians_Email");
+
+        builder.HasIndex(t => t.Status)
+            .HasDatabaseName("IX_Technicians_Status");
+
+        // Enhanced availability indexes
+        builder.HasIndex(t => new { t.IsCurrentlyAvailable, t.Status, t.TenantId })
+            .HasDatabaseName("IX_Technicians_Available_Status_Tenant")
+            .HasFilter("Status = 'Active'");
+
+        builder.HasIndex(t => new { t.UnavailabilityReason, t.ExpectedAvailableAt, t.TenantId })
+            .HasDatabaseName("IX_Technicians_Unavailable_Expected_Tenant")
+            .HasFilter("IsCurrentlyAvailable = 0 AND ExpectedAvailableAt IS NOT NULL");
+
+        builder.HasIndex(t => new { t.CanTakeEmergencyJobs, t.Status, t.TenantId })
+            .HasDatabaseName("IX_Technicians_Emergency_Status_Tenant")
+            .HasFilter("CanTakeEmergencyJobs = 1 AND Status = 'Active'");
+
+        builder.HasIndex(t => new { t.MaxConcurrentJobs, t.IsCurrentlyAvailable, t.TenantId })
+            .HasDatabaseName("IX_Technicians_Capacity_Available_Tenant")
+            .HasFilter("IsCurrentlyAvailable = 1");
+
+        builder.HasIndex(t => new { t.AvailabilityChangedAt, t.TenantId })
+            .HasDatabaseName("IX_Technicians_AvailabilityChanged_Tenant");
+
+        // Check constraints simplified for compatibility
+        // Note: Business rule validation is primarily handled in domain logic
     }
 }
