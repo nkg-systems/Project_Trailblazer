@@ -24,6 +24,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ServiceJob> ServiceJobs => Set<ServiceJob>();
     public DbSet<Route> Routes => Set<Route>();
     public DbSet<User> Users => Set<User>();
+    public DbSet<WeatherData> WeatherData => Set<WeatherData>();
     
     // New entities for core data features
     public DbSet<JobNote> JobNotes => Set<JobNote>();
@@ -37,6 +38,7 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RouteConfiguration());
         modelBuilder.ApplyConfiguration(new RouteStopConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new WeatherDataConfiguration());
         
         // New configurations for core data features
         modelBuilder.ApplyConfiguration(new JobNoteConfiguration());

@@ -38,6 +38,10 @@ public static class GlobalFiltersConfiguration
         // Global query filter for User - automatically filter by tenant
         modelBuilder.Entity<User>()
             .HasQueryFilter(u => string.IsNullOrEmpty(tenantId) || u.TenantId == tenantId);
+
+        // Global query filter for WeatherData - automatically filter by tenant
+        modelBuilder.Entity<WeatherData>()
+            .HasQueryFilter(wd => string.IsNullOrEmpty(tenantId) || wd.TenantId == tenantId);
     }
 
     /// <summary>
