@@ -556,3 +556,7 @@ temp/
 
 # Warp terminal
 WARP.md
+
+# Security analysis reports
+SECURITY_ANALYSIS.md
+SECURITY_AND_LOGIC_TEST_RESULTS.md

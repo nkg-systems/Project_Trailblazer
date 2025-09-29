@@ -83,6 +83,13 @@ builder.Services.AddMemoryCache();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
+// Register core data features services
+builder.Services.AddScoped<IJobNoteService, JobNoteService>();
+builder.Services.AddScoped<IJobStatusHistoryService, JobStatusHistoryService>();
+
+// Register tenant service
+builder.Services.AddScoped<ITenantService, TenantService>();
+
 // Register optimization services
 builder.Services.AddScoped<IRouteOptimizationService, RouteOptimizationService>();
 builder.Services.AddScoped<NearestNeighborOptimizer>();

@@ -35,6 +35,13 @@ public class ServiceJob : BaseEntity
     // Navigation properties
     public Technician? AssignedTechnician { get; private set; }
     public Route? Route { get; private set; }
+    
+    // Core data features navigation properties
+    private readonly List<JobNote> _jobNotes = new();
+    private readonly List<JobStatusHistory> _statusHistory = new();
+    
+    public IReadOnlyList<JobNote> JobNotes => _jobNotes.AsReadOnly();
+    public IReadOnlyList<JobStatusHistory> StatusHistory => _statusHistory.AsReadOnly();
 
     private ServiceJob() { } // For EF Core
 

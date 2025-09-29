@@ -48,6 +48,19 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DistanceFromPrevious, opt => opt.MapFrom(src => src.DistanceFromPreviousKm))
             .ForMember(dest => dest.TravelTimeFromPrevious, opt => opt.MapFrom(src => src.EstimatedTravelTime));
 
+        // Core data features mappings
+        CreateMap<JobNote, JobNoteDto>();
+        CreateMap<CreateJobNoteDto, JobNote>();
+        CreateMap<UpdateJobNoteDto, JobNote>();
+        
+        CreateMap<JobStatusHistory, JobStatusHistoryDto>();
+        CreateMap<CreateJobStatusHistoryDto, JobStatusHistory>();
+        
+        CreateMap<JobNote, CustomerJobNoteDto>();
+        CreateMap<JobStatusHistory, JobStatusHistorySummaryDto>()
+            .ForMember(dest => dest.PreviousStatusDuration, 
+                opt => opt.MapFrom(src => src.GetPreviousStatusDuration()));
+
         // Value Object mappings
         CreateMap<Address, AddressDto>();
         CreateMap<AddressDto, Address>()
