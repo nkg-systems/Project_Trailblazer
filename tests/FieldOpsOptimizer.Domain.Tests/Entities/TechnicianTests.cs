@@ -382,19 +382,21 @@ public class TechnicianTests : DomainTestBase
     {
         // Arrange
         var technician = new Technician(employeeId, firstName, lastName, email, tenantId);
-        var originalTimestamp = technician.UpdatedAt;
+        technician.UpdatedAt.Should().BeNull(); // Initially null
 
         // Act & Assert - Test multiple operations update the timestamp
         technician.UpdateContactInfo("New First", "New Last", "new@email.com");
-        technician.UpdatedAt.Should().BeAfter(originalTimestamp.Value);
+        technician.UpdatedAt.Should().NotBeNull();
+        var timestamp1 = technician.UpdatedAt!.Value;
 
-        var timestamp2 = technician.UpdatedAt;
         technician.AddSkill("New Skill");
-        technician.UpdatedAt.Should().BeAfter(timestamp2.Value);
+        technician.UpdatedAt.Should().NotBeNull();
+        technician.UpdatedAt.Should().BeAfter(timestamp1);
+        var timestamp2 = technician.UpdatedAt!.Value;
 
-        var timestamp3 = technician.UpdatedAt;
         technician.UpdateStatus(TechnicianStatus.Inactive);
-        technician.UpdatedAt.Should().BeAfter(timestamp3.Value);
+        technician.UpdatedAt.Should().NotBeNull();
+        technician.UpdatedAt.Should().BeAfter(timestamp2);
     }
 
     [Fact]
@@ -402,7 +404,7 @@ public class TechnicianTests : DomainTestBase
     {
         // Arrange
         var technician = CreateValidTechnician();
-        var skills = new[] { "Electrical", "Plumbing", "HVAC", "Carpentry" };
+        var skills = new[] { "HVAC", "Carpentry" }; // CreateValidTechnician already adds "Electrical" and "Plumbing"
 
         // Act
         foreach (var skill in skills)
@@ -411,15 +413,17 @@ public class TechnicianTests : DomainTestBase
         }
 
         // Assert
-        technician.Skills.Should().HaveCount(6); // 2 from CreateValidTechnician + 4 new ones
+        technician.Skills.Should().HaveCount(4); // 2 from CreateValidTechnician + 2 new ones
         technician.Skills.Should().Contain(skills);
+        technician.Skills.Should().Contain("Electrical"); // From CreateValidTechnician
+        technician.Skills.Should().Contain("Plumbing"); // From CreateValidTechnician
 
         // Remove some skills
         technician.RemoveSkill("Electrical");
         technician.RemoveSkill("HVAC");
 
         // Assert
-        technician.Skills.Should().HaveCount(4);
+        technician.Skills.Should().HaveCount(2);
         technician.Skills.Should().NotContain("Electrical");
         technician.Skills.Should().NotContain("HVAC");
         technician.Skills.Should().Contain("Plumbing");

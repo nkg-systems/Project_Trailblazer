@@ -469,18 +469,20 @@ public class ServiceJobTests : DomainTestBase
     {
         // Arrange
         var job = new ServiceJob(jobNumber, customerName, address, description, scheduledDate, estimatedDuration, tenantId);
-        var originalTimestamp = job.UpdatedAt;
+        job.UpdatedAt.Should().BeNull(); // Initially null
 
         // Act & Assert - Test multiple operations update the timestamp
         job.UpdateCustomerInfo("New Customer");
-        job.UpdatedAt.Should().BeAfter(originalTimestamp.Value);
+        job.UpdatedAt.Should().NotBeNull();
+        var timestamp1 = job.UpdatedAt!.Value;
 
-        var timestamp2 = job.UpdatedAt;
         job.UpdateServiceDetails("New description");
-        job.UpdatedAt.Should().BeAfter(timestamp2.Value);
+        job.UpdatedAt.Should().NotBeNull();
+        job.UpdatedAt.Should().BeAfter(timestamp1);
+        var timestamp2 = job.UpdatedAt!.Value;
 
-        var timestamp3 = job.UpdatedAt;
         job.AddRequiredSkill("New Skill");
-        job.UpdatedAt.Should().BeAfter(timestamp3.Value);
+        job.UpdatedAt.Should().NotBeNull();
+        job.UpdatedAt.Should().BeAfter(timestamp2);
     }
 }

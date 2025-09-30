@@ -60,7 +60,7 @@ public class RouteTests : DomainTestBase
         var job = CreateValidServiceJob();
         var sequenceOrder = 1;
         var estimatedTravelTime = TimeSpan.FromMinutes(15);
-        var originalUpdatedAt = route.UpdatedAt;
+        route.UpdatedAt.Should().BeNull(); // Initially null
 
         // Act
         route.AddStop(job, sequenceOrder, estimatedTravelTime);
@@ -72,7 +72,7 @@ public class RouteTests : DomainTestBase
         stop.RouteId.Should().Be(route.Id);
         stop.SequenceOrder.Should().Be(sequenceOrder);
         stop.EstimatedTravelTime.Should().Be(estimatedTravelTime);
-        route.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
+        route.UpdatedAt.Should().NotBeNull(); // Should be set after modification
     }
 
     [Fact]
@@ -170,14 +170,14 @@ public class RouteTests : DomainTestBase
     {
         // Arrange
         var route = CreateValidRoute();
-        var originalUpdatedAt = route.UpdatedAt;
+        route.UpdatedAt.Should().BeNull(); // Initially null
 
         // Act
         route.UpdateStatus(newStatus);
 
         // Assert
         route.Status.Should().Be(newStatus);
-        route.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
+        route.UpdatedAt.Should().NotBeNull(); // Should be set after modification
     }
 
     [Fact]
@@ -304,14 +304,14 @@ public class RouteTests : DomainTestBase
         // Arrange
         var route = CreateValidRoute();
         var newTechnicianId = Guid.NewGuid();
-        var originalUpdatedAt = route.UpdatedAt;
+        route.UpdatedAt.Should().BeNull(); // Initially null
 
         // Act
         route.ReassignTechnician(newTechnicianId);
 
         // Assert
         route.AssignedTechnicianId.Should().Be(newTechnicianId);
-        route.UpdatedAt.Should().BeAfter(originalUpdatedAt.Value);
+        route.UpdatedAt.Should().NotBeNull(); // Should be set after modification
     }
 
     [Fact]
@@ -422,20 +422,22 @@ public class RouteTests : DomainTestBase
     {
         // Arrange
         var route = new Route(name, scheduledDate, assignedTechnicianId, tenantId);
-        var originalTimestamp = route.UpdatedAt;
+        route.UpdatedAt.Should().BeNull(); // Initially null
 
         // Act & Assert - Test multiple operations update the timestamp
         route.ReassignTechnician(Guid.NewGuid());
-        route.UpdatedAt.Should().BeAfter(originalTimestamp.Value);
+        route.UpdatedAt.Should().NotBeNull();
+        var timestamp1 = route.UpdatedAt!.Value;
 
-        var timestamp2 = route.UpdatedAt;
         route.UpdateStatus(RouteStatus.InProgress);
-        route.UpdatedAt.Should().BeAfter(timestamp2.Value);
+        route.UpdatedAt.Should().NotBeNull();
+        route.UpdatedAt.Should().BeAfter(timestamp1);
+        var timestamp2 = route.UpdatedAt!.Value;
 
-        var timestamp3 = route.UpdatedAt;
         var job = CreateValidServiceJob();
         route.AddStop(job, 1, TimeSpan.FromMinutes(15));
-        route.UpdatedAt.Should().BeAfter(timestamp3.Value);
+        route.UpdatedAt.Should().NotBeNull();
+        route.UpdatedAt.Should().BeAfter(timestamp2);
     }
 }
 
