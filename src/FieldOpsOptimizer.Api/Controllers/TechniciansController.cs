@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FieldOpsOptimizer.Infrastructure.Data;
@@ -13,6 +14,7 @@ namespace FieldOpsOptimizer.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class TechniciansController : ControllerBase
 {
     private readonly ApplicationDbContext _context;

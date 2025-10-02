@@ -1,11 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using AutoMapper;
 using FieldOpsOptimizer.Infrastructure.Data;
-using FieldOpsOptimizer.Api.DTOs;
 using FieldOpsOptimizer.Domain.Entities;
 using FieldOpsOptimizer.Domain.Enums;
-using Microsoft.AspNetCore.Authorization;
+using FieldOpsOptimizer.Domain.ValueObjects;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
@@ -16,6 +15,7 @@ namespace FieldOpsOptimizer.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json")]
 [Authorize]
 public class ReportsController : ControllerBase
 {

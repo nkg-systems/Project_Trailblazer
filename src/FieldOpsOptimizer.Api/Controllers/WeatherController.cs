@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using FieldOpsOptimizer.Application.Common.Interfaces;
 using FieldOpsOptimizer.Domain.ValueObjects;
 using FieldOpsOptimizer.Domain.Enums;
@@ -14,6 +14,7 @@ namespace FieldOpsOptimizer.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json")]
 [Authorize]
 public class WeatherController : ControllerBase
 {

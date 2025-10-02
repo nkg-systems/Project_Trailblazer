@@ -1,9 +1,10 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using FieldOpsOptimizer.Infrastructure.Optimization;
-using FieldOpsOptimizer.Domain.Services;
-using FieldOpsOptimizer.Domain.Enums;
-using FieldOpsOptimizer.Domain.ValueObjects;
 using FieldOpsOptimizer.Application.Common.Interfaces;
+using FieldOpsOptimizer.Application.Common.Models;
+using FieldOpsOptimizer.Domain.ValueObjects;
+using FieldOpsOptimizer.Domain.Enums;
+using FieldOpsOptimizer.Api.DTOs;
 using FieldOpsOptimizer.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +16,7 @@ namespace FieldOpsOptimizer.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
+[Authorize]
 public class RouteOptimizationController : ControllerBase
 {
     private readonly IRouteOptimizationService _optimizationService;

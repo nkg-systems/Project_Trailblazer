@@ -9,12 +9,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using FieldOpsOptimizer.Api.Middleware;
+using FieldOpsOptimizer.Api.Infrastructure.Middleware;
 using FieldOpsOptimizer.Api.Common;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using AutoMapper;
 using FieldOpsOptimizer.Api.Mapping;
 using FieldOpsOptimizer.Api;
+using AspNetCoreRateLimit;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,19 +27,23 @@ builder.ConfigureLoggingAndMonitoring();
 // Add services to the container.
 
 // Configure Database
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_CONNECTION_STRING") 
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
 if (builder.Environment.IsDevelopment())
 {
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    
     if (string.IsNullOrEmpty(connectionString))
     {
         // Fallback to in-memory database for local development
+        Console.WriteLine("WARNING: No database connection string found. Using in-memory database.");
+        Console.WriteLine("Set DATABASE_CONNECTION_STRING environment variable for persistent database.");
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseInMemoryDatabase("TestDb"));
     }
     else
     {
         // Use PostgreSQL for development if connection string is provided
+        Console.WriteLine("Using database connection from environment variable or configuration.");
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(connectionString, npgsqlOptions =>
             {
@@ -54,12 +60,11 @@ if (builder.Environment.IsDevelopment())
 }
 else
 {
-    // Production database configuration
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
-        throw new InvalidOperationException("Database connection string 'DefaultConnection' not found. Please configure your connection string in appsettings.json or environment variables.");
-    
-    // Expand environment variables in connection string
-    connectionString = Environment.ExpandEnvironmentVariables(connectionString);
+    // Production database configuration - environment variable is required
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("Database connection string not found. Please set the DATABASE_CONNECTION_STRING environment variable.");
+    }
     
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString, npgsqlOptions =>
@@ -76,8 +81,15 @@ else
 // Configure AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// Add memory cache for weather service
+// Add memory cache for weather service and rate limiting
 builder.Services.AddMemoryCache();
+
+// Add rate limiting
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
 
 // Register repositories and services
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
@@ -108,10 +120,25 @@ builder.Services.AddScoped<IRepository<FieldOpsOptimizer.Domain.Entities.User>, 
 
 // Configure JWT authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>() ?? new JwtSettings();
-if (string.IsNullOrEmpty(jwtSettings.Secret))
+
+// Get JWT secret from environment variables (secure approach)
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? jwtSettings.Secret;
+if (string.IsNullOrEmpty(jwtSecret))
 {
-    throw new InvalidOperationException("JWT Secret is not configured. Please set JwtSettings:Secret in appsettings.json or environment variables.");
+    if (builder.Environment.IsDevelopment())
+    {
+        // For development, allow a fallback to a development-only secret
+        jwtSecret = "DevOnlySecret_FieldOpsOptimizer_MinimumLength32CharactersForSecurity!";
+        Console.WriteLine("WARNING: Using development JWT secret. Set JWT_SECRET environment variable for production.");
+    }
+    else
+    {
+        throw new InvalidOperationException("JWT Secret is not configured. Please set the JWT_SECRET environment variable.");
+    }
 }
+
+// Override the secret with the secure one
+jwtSettings.Secret = jwtSecret;
 
 builder.Services.AddAuthentication(options =>
 {
@@ -138,6 +165,33 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+// Configure CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DefaultPolicy", policy =>
+    {
+        if (builder.Environment.IsDevelopment())
+        {
+            // Allow all origins in development for easier testing
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+        else
+        {
+            // Restrict origins in production - configure these based on your frontend domains
+            var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() 
+                ?? new[] { "https://yourdomain.com", "https://app.yourdomain.com" };
+            
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials() // Allow cookies/auth headers
+                  .WithExposedHeaders("X-Pagination"); // Expose pagination headers if needed
+        }
+    });
+});
+
 // Configure global exception handling
 builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<ProblemDetailsFactory, CustomProblemDetailsFactory>();
@@ -147,6 +201,19 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 {
     options.SuppressModelStateInvalidFilter = false;
     options.SuppressMapClientErrors = false;
+});
+
+// Add Anti-Forgery token support
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "X-XSRF-TOKEN";
+    options.SuppressXFrameOptionsHeader = false; // Keep X-Frame-Options header
+    options.Cookie.Name = "__RequestVerificationToken";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment() 
+        ? CookieSecurePolicy.SameAsRequest 
+        : CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Strict;
 });
 
 // Health checks are configured in ConfigureLoggingAndMonitoring()
@@ -204,6 +271,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Add security headers middleware early in the pipeline
+app.UseSecurityHeaders();
+
+// Add rate limiting
+app.UseIpRateLimiting();
+
+// Add CORS
+app.UseCors("DefaultPolicy");
+
 // Authentication and authorization are configured in ConfigureMonitoringPipeline()
 app.UseAuthentication();
 app.UseAuthorization();
@@ -220,3 +296,6 @@ finally
 {
     await app.StopWithLoggingAsync();
 }
+
+// Make Program class accessible for integration testing
+public partial class Program { }
