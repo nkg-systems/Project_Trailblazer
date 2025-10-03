@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using FieldOpsOptimizer.Application.Common.Interfaces;
 using FieldOpsOptimizer.Application.Common.Models;
 using FieldOpsOptimizer.Domain.ValueObjects;
-using FieldOpsOptimizer.Domain.Enums;
-using FieldOpsOptimizer.Api.DTOs;
 using FieldOpsOptimizer.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using DomainEnums = FieldOpsOptimizer.Domain.Enums;
+using ApiEnums = FieldOpsOptimizer.Api.DTOs;
 
 namespace FieldOpsOptimizer.Api.Controllers;
 
@@ -98,7 +98,7 @@ public class RouteOptimizationController : ControllerBase
             {
                 Jobs = jobs,
                 Technician = technician,
-                Objective = request.Objective,
+                Objective = ConvertToDomainObjective(request.Objective),
                 RespectTimeWindows = request.RespectTimeWindows,
                 ValidateSkills = request.ValidateSkills,
                 StartLocation = request.StartLocation ?? technician.HomeAddress.Coordinate,
@@ -109,14 +109,14 @@ public class RouteOptimizationController : ControllerBase
             // Run optimization
             var result = await _optimizationService.OptimizeRouteAsync(
                 parameters, 
-                request.Algorithm, 
+                ConvertToDomainAlgorithm(request.Algorithm), 
                 cancellationToken);
 
             // Convert to response model
             var response = new RouteOptimizationResponse
             {
                 OptimizationId = Guid.NewGuid(),
-                Algorithm = result.Algorithm,
+                Algorithm = ConvertToApiAlgorithm(result.Algorithm),
                 TotalDistanceKm = result.TotalDistanceKm,
                 TotalDuration = result.TotalDuration,
                 TotalCost = result.TotalCost,
@@ -214,7 +214,7 @@ public class RouteOptimizationController : ControllerBase
             {
                 Jobs = jobs,
                 Technician = technician!,
-                Objective = request.Objective,
+                Objective = ConvertToDomainObjective(request.Objective),
                 RespectTimeWindows = request.RespectTimeWindows,
                 ValidateSkills = request.ValidateSkills,
                 StartLocation = request.StartLocation ?? technician!.HomeAddress.Coordinate
@@ -223,17 +223,17 @@ public class RouteOptimizationController : ControllerBase
             // Run comparison
             var comparison = await _optimizationService.CompareAlgorithmsAsync(
                 parameters,
-                request.Algorithms,
+                request.Algorithms.Select(ConvertToDomainAlgorithm).ToList(),
                 cancellationToken);
 
             // Build response
             var response = new AlgorithmComparisonResponse
             {
                 ComparisonId = Guid.NewGuid(),
-                BestAlgorithm = comparison.BestResult.Algorithm,
+                BestAlgorithm = ConvertToApiAlgorithm(comparison.BestResult.Algorithm),
                 Results = comparison.AllResults.Select(r => new AlgorithmResultSummary
                 {
-                    Algorithm = r.Algorithm,
+                    Algorithm = ConvertToApiAlgorithm(r.Algorithm),
                     TotalDistanceKm = r.TotalDistanceKm,
                     TotalDuration = r.TotalDuration,
                     TotalCost = r.TotalCost,
@@ -261,7 +261,7 @@ public class RouteOptimizationController : ControllerBase
     [HttpGet("algorithms")]
     [ProducesResponseType(typeof(AvailableAlgorithmsResponse), StatusCodes.Status200OK)]
     public ActionResult<AvailableAlgorithmsResponse> GetAvailableAlgorithms(
-        [FromQuery] OptimizationObjective objective = OptimizationObjective.MinimizeDistance)
+        [FromQuery] DomainEnums.OptimizationObjective objective = DomainEnums.OptimizationObjective.MinimizeDistance)
     {
         var algorithms = _optimizationService.GetAvailableAlgorithms(objective);
         
@@ -301,36 +301,36 @@ public class RouteOptimizationController : ControllerBase
         return (IsValid: !errors.Any(), Errors: errors);
     }
 
-    private static string GetAlgorithmDescription(OptimizationAlgorithm algorithm)
+    private static string GetAlgorithmDescription(DomainEnums.OptimizationAlgorithm algorithm)
     {
         return algorithm switch
         {
-            OptimizationAlgorithm.NearestNeighbor => "Fast greedy algorithm that picks the nearest unvisited job",
-            OptimizationAlgorithm.TwoOpt => "Improves routes by eliminating crossing paths",
-            OptimizationAlgorithm.Genetic => "Advanced population-based search with high solution quality",
+            DomainEnums.OptimizationAlgorithm.NearestNeighbor => "Fast greedy algorithm that picks the nearest unvisited job",
+            DomainEnums.OptimizationAlgorithm.TwoOpt => "Improves routes by eliminating crossing paths",
+            DomainEnums.OptimizationAlgorithm.Genetic => "Advanced population-based search with high solution quality",
             _ => "Algorithm description not available"
         };
     }
 
-    private static AlgorithmCharacteristics GetAlgorithmCharacteristics(OptimizationAlgorithm algorithm)
+    private static AlgorithmCharacteristics GetAlgorithmCharacteristics(DomainEnums.OptimizationAlgorithm algorithm)
     {
         return algorithm switch
         {
-            OptimizationAlgorithm.NearestNeighbor => new AlgorithmCharacteristics
+            DomainEnums.OptimizationAlgorithm.NearestNeighbor => new AlgorithmCharacteristics
             {
                 Speed = "Very Fast",
                 Quality = "Basic",
                 Complexity = "Low",
                 BestFor = "Quick solutions with many jobs"
             },
-            OptimizationAlgorithm.TwoOpt => new AlgorithmCharacteristics
+            DomainEnums.OptimizationAlgorithm.TwoOpt => new AlgorithmCharacteristics
             {
                 Speed = "Fast",
                 Quality = "Good", 
                 Complexity = "Medium",
                 BestFor = "Balanced speed and quality"
             },
-            OptimizationAlgorithm.Genetic => new AlgorithmCharacteristics
+            DomainEnums.OptimizationAlgorithm.Genetic => new AlgorithmCharacteristics
             {
                 Speed = "Slower",
                 Quality = "Excellent",
@@ -338,6 +338,54 @@ public class RouteOptimizationController : ControllerBase
                 BestFor = "Best possible routes with fewer jobs"
             },
             _ => new AlgorithmCharacteristics()
+        };
+    }
+
+    private static DomainEnums.OptimizationAlgorithm ConvertToDomainAlgorithm(ApiEnums.OptimizationAlgorithm apiAlgorithm)
+    {
+        return apiAlgorithm switch
+        {
+            ApiEnums.OptimizationAlgorithm.NearestNeighbor => DomainEnums.OptimizationAlgorithm.NearestNeighbor,
+            ApiEnums.OptimizationAlgorithm.TwoOpt => DomainEnums.OptimizationAlgorithm.TwoOpt,
+            ApiEnums.OptimizationAlgorithm.Genetic => DomainEnums.OptimizationAlgorithm.Genetic,
+            ApiEnums.OptimizationAlgorithm.SimulatedAnnealing => DomainEnums.OptimizationAlgorithm.SimulatedAnnealing,
+            _ => DomainEnums.OptimizationAlgorithm.TwoOpt
+        };
+    }
+
+    private static ApiEnums.OptimizationAlgorithm ConvertToApiAlgorithm(DomainEnums.OptimizationAlgorithm domainAlgorithm)
+    {
+        return domainAlgorithm switch
+        {
+            DomainEnums.OptimizationAlgorithm.NearestNeighbor => ApiEnums.OptimizationAlgorithm.NearestNeighbor,
+            DomainEnums.OptimizationAlgorithm.TwoOpt => ApiEnums.OptimizationAlgorithm.TwoOpt,
+            DomainEnums.OptimizationAlgorithm.Genetic => ApiEnums.OptimizationAlgorithm.Genetic,
+            DomainEnums.OptimizationAlgorithm.SimulatedAnnealing => ApiEnums.OptimizationAlgorithm.SimulatedAnnealing,
+            _ => ApiEnums.OptimizationAlgorithm.TwoOpt
+        };
+    }
+
+    private static DomainEnums.OptimizationObjective ConvertToDomainObjective(ApiEnums.OptimizationObjective apiObjective)
+    {
+        return apiObjective switch
+        {
+            ApiEnums.OptimizationObjective.MinimizeDistance => DomainEnums.OptimizationObjective.MinimizeDistance,
+            ApiEnums.OptimizationObjective.MinimizeTime => DomainEnums.OptimizationObjective.MinimizeTime,
+            ApiEnums.OptimizationObjective.MinimizeCost => DomainEnums.OptimizationObjective.MinimizeCost,
+            ApiEnums.OptimizationObjective.MaximizeJobs => DomainEnums.OptimizationObjective.MaximizeJobs,
+            _ => DomainEnums.OptimizationObjective.MinimizeDistance
+        };
+    }
+
+    private static ApiEnums.OptimizationObjective ConvertToApiObjective(DomainEnums.OptimizationObjective domainObjective)
+    {
+        return domainObjective switch
+        {
+            DomainEnums.OptimizationObjective.MinimizeDistance => ApiEnums.OptimizationObjective.MinimizeDistance,
+            DomainEnums.OptimizationObjective.MinimizeTime => ApiEnums.OptimizationObjective.MinimizeTime,
+            DomainEnums.OptimizationObjective.MinimizeCost => ApiEnums.OptimizationObjective.MinimizeCost,
+            DomainEnums.OptimizationObjective.MaximizeJobs => ApiEnums.OptimizationObjective.MaximizeJobs,
+            _ => ApiEnums.OptimizationObjective.MinimizeDistance
         };
     }
 }
@@ -358,12 +406,12 @@ public record OptimizeRouteRequest
     /// <summary>
     /// Optimization algorithm to use
     /// </summary>
-    public OptimizationAlgorithm Algorithm { get; init; } = OptimizationAlgorithm.TwoOpt;
+    public ApiEnums.OptimizationAlgorithm Algorithm { get; init; } = ApiEnums.OptimizationAlgorithm.TwoOpt;
 
     /// <summary>
     /// Optimization objective
     /// </summary>
-    public OptimizationObjective Objective { get; init; } = OptimizationObjective.MinimizeDistance;
+    public ApiEnums.OptimizationObjective Objective { get; init; } = ApiEnums.OptimizationObjective.MinimizeDistance;
 
     /// <summary>
     /// Whether to respect job time windows
@@ -394,7 +442,7 @@ public record OptimizeRouteRequest
 public record RouteOptimizationResponse
 {
     public Guid OptimizationId { get; init; }
-    public OptimizationAlgorithm Algorithm { get; init; }
+    public ApiEnums.OptimizationAlgorithm Algorithm { get; init; }
     public double TotalDistanceKm { get; init; }
     public TimeSpan TotalDuration { get; init; }
     public decimal TotalCost { get; init; }
@@ -434,8 +482,8 @@ public record CompareAlgorithmsRequest
 {
     public required Guid TechnicianId { get; init; }
     public required List<Guid> JobIds { get; init; }
-    public required List<OptimizationAlgorithm> Algorithms { get; init; }
-    public OptimizationObjective Objective { get; init; } = OptimizationObjective.MinimizeDistance;
+    public required List<ApiEnums.OptimizationAlgorithm> Algorithms { get; init; }
+    public ApiEnums.OptimizationObjective Objective { get; init; } = ApiEnums.OptimizationObjective.MinimizeDistance;
     public bool RespectTimeWindows { get; init; } = true;
     public bool ValidateSkills { get; init; } = true;
     public Coordinate? StartLocation { get; init; }
@@ -444,14 +492,14 @@ public record CompareAlgorithmsRequest
 public record AlgorithmComparisonResponse
 {
     public Guid ComparisonId { get; init; }
-    public OptimizationAlgorithm BestAlgorithm { get; init; }
+    public ApiEnums.OptimizationAlgorithm BestAlgorithm { get; init; }
     public List<AlgorithmResultSummary> Results { get; init; } = new();
     public Dictionary<string, object> ComparisonMetrics { get; init; } = new();
 }
 
 public record AlgorithmResultSummary
 {
-    public OptimizationAlgorithm Algorithm { get; init; }
+    public ApiEnums.OptimizationAlgorithm Algorithm { get; init; }
     public double TotalDistanceKm { get; init; }
     public TimeSpan TotalDuration { get; init; }
     public decimal TotalCost { get; init; }
@@ -462,13 +510,13 @@ public record AlgorithmResultSummary
 
 public record AvailableAlgorithmsResponse
 {
-    public OptimizationObjective Objective { get; init; }
+    public ApiEnums.OptimizationObjective Objective { get; init; }
     public List<AlgorithmInfo> AvailableAlgorithms { get; init; } = new();
 }
 
 public record AlgorithmInfo
 {
-    public OptimizationAlgorithm Algorithm { get; init; }
+    public ApiEnums.OptimizationAlgorithm Algorithm { get; init; }
     public string Name { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
     public AlgorithmCharacteristics Characteristics { get; init; } = new();
