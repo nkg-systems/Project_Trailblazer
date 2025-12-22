@@ -9,6 +9,7 @@ using FieldOpsOptimizer.Application.Common.Models;
 using FieldOpsOptimizer.Domain.Entities;
 using FieldOpsOptimizer.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -22,15 +23,18 @@ public class AuthService : IAuthService
     private readonly IRepository<User> _userRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly JwtSettings _jwtSettings;
+    private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         IRepository<User> userRepository,
         IUnitOfWork unitOfWork,
-        IOptions<JwtSettings> jwtSettings)
+        IOptions<JwtSettings> jwtSettings,
+        ILogger<AuthService> logger)
     {
         _userRepository = userRepository;
         _unitOfWork = unitOfWork;
         _jwtSettings = jwtSettings.Value;
+        _logger = logger;
     }
 
     public async Task<AuthResult> AuthenticateAsync(string usernameOrEmail, string password, string tenantId, CancellationToken cancellationToken = default)
@@ -68,7 +72,7 @@ public class AuthService : IAuthService
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
             // Generate tokens
-            var accessToken = await GenerateJwtTokenAsync(user, cancellationToken);
+            var accessToken = GenerateJwtToken(user);
             var refreshToken = GenerateRefreshToken();
             var refreshTokenExpiry = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays);
 
@@ -87,6 +91,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Authentication failed for user {UsernameOrEmail}", usernameOrEmail);
             return new AuthResult
             {
                 Success = false,
@@ -95,7 +100,7 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<string> GenerateJwtTokenAsync(User user, CancellationToken cancellationToken = default)
+    public string GenerateJwtToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_jwtSettings.Secret);
@@ -160,7 +165,7 @@ public class AuthService : IAuthService
             }
 
             // Generate new tokens
-            var newAccessToken = await GenerateJwtTokenAsync(user, cancellationToken);
+            var newAccessToken = GenerateJwtToken(user);
             var newRefreshToken = GenerateRefreshToken();
             var newRefreshTokenExpiry = DateTime.UtcNow.AddDays(_jwtSettings.RefreshTokenExpiryDays);
 
@@ -179,6 +184,7 @@ public class AuthService : IAuthService
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Token refresh failed");
             return new AuthResult
             {
                 Success = false,

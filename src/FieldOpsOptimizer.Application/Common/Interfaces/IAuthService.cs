@@ -16,7 +16,7 @@ public interface IAuthService
     /// <summary>
     /// Generates a new JWT token for the user
     /// </summary>
-    Task<string> GenerateJwtTokenAsync(User user, CancellationToken cancellationToken = default);
+    string GenerateJwtToken(User user);
     
     /// <summary>
     /// Generates a refresh token

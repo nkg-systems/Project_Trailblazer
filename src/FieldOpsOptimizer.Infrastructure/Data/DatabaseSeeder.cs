@@ -66,7 +66,11 @@ public class DatabaseSeeder
 
         _logger.LogInformation("Seeding initial users...");
 
-        var authService = new AuthService(null!, null!, Microsoft.Extensions.Options.Options.Create(new FieldOpsOptimizer.Application.Common.Models.JwtSettings()));
+        var authService = new AuthService(
+            null!, 
+            null!, 
+            Microsoft.Extensions.Options.Options.Create(new FieldOpsOptimizer.Application.Common.Models.JwtSettings()),
+            _logger as ILogger<AuthService> ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<AuthService>.Instance);
 
         var users = new[]
         {
