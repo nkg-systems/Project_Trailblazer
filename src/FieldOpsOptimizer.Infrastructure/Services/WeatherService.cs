@@ -21,7 +21,7 @@ public class WeatherService : IWeatherService
         _logger = logger;
     }
 
-    public async Task<WeatherForecast> GetCurrentWeatherAsync(
+    public Task<WeatherForecast> GetCurrentWeatherAsync(
         Coordinate location, 
         CancellationToken cancellationToken = default)
     {
@@ -30,7 +30,7 @@ public class WeatherService : IWeatherService
 
         // For now, return a mock weather forecast
         // In production, this would call Open-Meteo API
-        return new WeatherForecast(
+        var forecast = new WeatherForecast(
             location,
             DateTime.UtcNow,
             TemperatureCelsius: 22.0,
@@ -46,9 +46,10 @@ public class WeatherService : IWeatherService
             Visibility: 10.0,
             CloudCover: 40.0,
             UvIndex: 5.0);
+        return Task.FromResult(forecast);
     }
 
-    public async Task<WeatherForecast> GetForecastAsync(
+    public Task<WeatherForecast> GetForecastAsync(
         Coordinate location, 
         DateTime dateTime, 
         CancellationToken cancellationToken = default)
@@ -57,7 +58,7 @@ public class WeatherService : IWeatherService
             location.Latitude, location.Longitude, dateTime);
 
         // Mock implementation - in production would call weather API
-        return new WeatherForecast(
+        var forecast = new WeatherForecast(
             location,
             dateTime,
             TemperatureCelsius: 20.0,
@@ -73,6 +74,7 @@ public class WeatherService : IWeatherService
             Visibility: 8.0,
             CloudCover: 80.0,
             UvIndex: 2.0);
+        return Task.FromResult(forecast);
     }
 
     public async Task<List<WeatherForecast>> GetHourlyForecastAsync(
@@ -162,7 +164,7 @@ public class WeatherService : IWeatherService
         };
     }
 
-    public async Task<IEnumerable<WeatherAlert>> GetWeatherAlertsAsync(
+    public Task<IEnumerable<WeatherAlert>> GetWeatherAlertsAsync(
         Coordinate location, 
         double radiusKm, 
         CancellationToken cancellationToken = default)
@@ -171,7 +173,7 @@ public class WeatherService : IWeatherService
             location.Latitude, location.Longitude, radiusKm);
 
         // Mock implementation - in production would fetch from weather service
-        return new List<WeatherAlert>();
+        return Task.FromResult<IEnumerable<WeatherAlert>>(new List<WeatherAlert>());
     }
 
     public async Task<JobWeatherRecommendation> GetJobSchedulingRecommendationAsync(
@@ -198,7 +200,7 @@ public class WeatherService : IWeatherService
                             "Consider rescheduling due to unfavorable weather conditions",
             ConfidenceLevel = confidenceLevel,
             Considerations = considerations,
-            AlternativeTime = await alternativeTime,
+            AlternativeTime = alternativeTime != null ? await alternativeTime : null,
             CurrentWeather = currentWeather,
             ForecastAtTime = forecastWeather
         };

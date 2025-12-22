@@ -115,17 +115,17 @@ public class TenantService : ITenantService
     /// </summary>
     /// <param name="tenantId">Tenant ID to validate access for</param>
     /// <returns>True if user has access to the tenant</returns>
-    public async Task<bool> HasTenantAccessAsync(string tenantId)
+    public Task<bool> HasTenantAccessAsync(string tenantId)
     {
         if (string.IsNullOrEmpty(tenantId))
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext?.User?.Identity?.IsAuthenticated != true)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         // TODO: In a real application, you would check user permissions against a database
@@ -141,7 +141,7 @@ public class TenantService : ITenantService
                 httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, 
                 tenantId, 
                 hasAccess);
-            return hasAccess;
+            return Task.FromResult(hasAccess);
         }
 
         // 2. If no tenant claim, check if user is a system admin
@@ -149,26 +149,26 @@ public class TenantService : ITenantService
         if (isSystemAdmin)
         {
             _logger.LogDebug("System admin user has access to tenant {TenantId}", tenantId);
-            return true;
+            return Task.FromResult(true);
         }
 
         // 3. Default to no access
         _logger.LogWarning("User {UserId} denied access to tenant {TenantId}", 
             httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, 
             tenantId);
-        return false;
+        return Task.FromResult(false);
     }
 
     /// <summary>
     /// Gets all tenants that the current user has access to
     /// </summary>
     /// <returns>Collection of accessible tenants</returns>
-    public async Task<IEnumerable<TenantInfo>> GetAccessibleTenantsAsync()
+    public Task<IEnumerable<TenantInfo>> GetAccessibleTenantsAsync()
     {
         var httpContext = _httpContextAccessor.HttpContext;
         if (httpContext?.User?.Identity?.IsAuthenticated != true)
         {
-            return Enumerable.Empty<TenantInfo>();
+            return Task.FromResult(Enumerable.Empty<TenantInfo>());
         }
 
         // TODO: In a real application, you would fetch this from a database
@@ -218,7 +218,7 @@ public class TenantService : ITenantService
             httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value, 
             tenants.Count);
 
-        return tenants;
+        return Task.FromResult<IEnumerable<TenantInfo>>(tenants);
     }
 
     /// <summary>
