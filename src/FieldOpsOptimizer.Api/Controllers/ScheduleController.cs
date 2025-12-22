@@ -74,7 +74,7 @@ public class ScheduleController : ControllerBase
             {
                 "name" => sortDescending ? query.OrderByDescending(t => t.FullName) : query.OrderBy(t => t.FullName),
                 "status" => sortDescending ? query.OrderByDescending(t => t.Status) : query.OrderBy(t => t.Status),
-                "location" => sortDescending ? query.OrderByDescending(t => t.HomeAddress.FormattedAddress) : query.OrderBy(t => t.HomeAddress.FormattedAddress),
+                "location" => sortDescending ? query.OrderByDescending(t => t.HomeAddress != null ? t.HomeAddress.FormattedAddress : string.Empty) : query.OrderBy(t => t.HomeAddress != null ? t.HomeAddress.FormattedAddress : string.Empty),
                 _ => sortDescending ? query.OrderByDescending(t => t.UpdatedAt) : query.OrderBy(t => t.UpdatedAt)
             };
 

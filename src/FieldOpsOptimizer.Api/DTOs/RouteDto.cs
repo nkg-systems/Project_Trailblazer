@@ -102,6 +102,6 @@ public enum OptimizationObjective
 {
     MinimizeDistance,
     MinimizeTime,
-    MinimizeCost,
-    MaximizeJobs
+    BalanceWorkload,
+    MaximizeRevenue
 }

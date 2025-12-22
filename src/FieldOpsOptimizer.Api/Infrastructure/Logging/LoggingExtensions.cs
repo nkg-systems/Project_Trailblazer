@@ -256,7 +256,7 @@ public static class LoggingExtensions
 
 public static class StructuredLogging
 {
-    public static IDisposable BeginJobScope(this ILogger logger, string jobId, string? tenantId = null)
+    public static IDisposable? BeginJobScope(this ILogger logger, string jobId, string? tenantId = null)
     {
         var scope = new Dictionary<string, object>
         {
@@ -270,7 +270,7 @@ public static class StructuredLogging
         return logger.BeginScope(scope);
     }
 
-    public static IDisposable BeginTechnicianScope(this ILogger logger, string technicianId, string? tenantId = null)
+    public static IDisposable? BeginTechnicianScope(this ILogger logger, string technicianId, string? tenantId = null)
     {
         var scope = new Dictionary<string, object>
         {
@@ -284,7 +284,7 @@ public static class StructuredLogging
         return logger.BeginScope(scope);
     }
 
-    public static IDisposable BeginRouteScope(this ILogger logger, string routeId, string? tenantId = null)
+    public static IDisposable? BeginRouteScope(this ILogger logger, string routeId, string? tenantId = null)
     {
         var scope = new Dictionary<string, object>
         {
@@ -298,7 +298,7 @@ public static class StructuredLogging
         return logger.BeginScope(scope);
     }
 
-    public static IDisposable BeginOperationScope(this ILogger logger, string operationType, string operationId, 
+    public static IDisposable? BeginOperationScope(this ILogger logger, string operationType, string operationId, 
         Dictionary<string, object>? additionalData = null)
     {
         var scope = new Dictionary<string, object>

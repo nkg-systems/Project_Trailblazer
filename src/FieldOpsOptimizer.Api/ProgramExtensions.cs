@@ -301,7 +301,7 @@ public class MetricsUpdateService : BackgroundService
         _logger.LogInformation("Metrics update service stopping");
     }
 
-    private async Task UpdateMetricsAsync()
+    private Task UpdateMetricsAsync()
     {
         try
         {
@@ -329,5 +329,7 @@ public class MetricsUpdateService : BackgroundService
             _logger.LogError(ex, "Failed to update metrics");
             throw;
         }
+        
+        return Task.CompletedTask;
     }
 }

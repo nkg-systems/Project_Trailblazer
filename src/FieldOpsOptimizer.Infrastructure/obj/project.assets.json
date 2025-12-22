@@ -1950,11 +1950,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Infrastructure\\FieldOpsOptimizer.Infrastructure.csproj",
+      "projectUniqueName": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Infrastructure\\FieldOpsOptimizer.Infrastructure.csproj",
       "projectName": "FieldOpsOptimizer.Infrastructure",
-      "projectPath": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Infrastructure\\FieldOpsOptimizer.Infrastructure.csproj",
+      "projectPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Infrastructure\\FieldOpsOptimizer.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\Greywater\\.nuget\\packages\\",
-      "outputPath": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Infrastructure\\obj\\",
+      "outputPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -1975,8 +1975,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Application\\FieldOpsOptimizer.Application.csproj": {
-              "projectPath": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Application\\FieldOpsOptimizer.Application.csproj"
+            "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Application\\FieldOpsOptimizer.Application.csproj": {
+              "projectPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Application\\FieldOpsOptimizer.Application.csproj"
             }
           }
         }

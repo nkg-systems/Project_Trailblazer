@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\FieldOpsOptimizer.Web.csproj": {}
+    "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\FieldOpsOptimizer.Web.csproj": {}
   },
   "projects": {
-    "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\FieldOpsOptimizer.Web.csproj": {
+    "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\FieldOpsOptimizer.Web.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\FieldOpsOptimizer.Web.csproj",
+        "projectUniqueName": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\FieldOpsOptimizer.Web.csproj",
         "projectName": "FieldOpsOptimizer.Web",
-        "projectPath": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\FieldOpsOptimizer.Web.csproj",
+        "projectPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\FieldOpsOptimizer.Web.csproj",
         "packagesPath": "C:\\Users\\Greywater\\.nuget\\packages\\",
-        "outputPath": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\obj\\",
+        "outputPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Web\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\FieldOpsOptimizer.Simulator.csproj": {}
+    "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\FieldOpsOptimizer.Simulator.csproj": {}
   },
   "projects": {
-    "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\FieldOpsOptimizer.Simulator.csproj": {
+    "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\FieldOpsOptimizer.Simulator.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\FieldOpsOptimizer.Simulator.csproj",
+        "projectUniqueName": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\FieldOpsOptimizer.Simulator.csproj",
         "projectName": "FieldOpsOptimizer.Simulator",
-        "projectPath": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\FieldOpsOptimizer.Simulator.csproj",
+        "projectPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\FieldOpsOptimizer.Simulator.csproj",
         "packagesPath": "C:\\Users\\Greywater\\.nuget\\packages\\",
-        "outputPath": "E:\\Git\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\obj\\",
+        "outputPath": "E:\\GIT\\Project_Trailblazer\\src\\FieldOpsOptimizer.Simulator\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

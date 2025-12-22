@@ -101,7 +101,7 @@ public class RouteOptimizationController : ControllerBase
                 Objective = ConvertToDomainObjective(request.Objective),
                 RespectTimeWindows = request.RespectTimeWindows,
                 ValidateSkills = request.ValidateSkills,
-                StartLocation = request.StartLocation ?? technician.HomeAddress.Coordinate,
+                StartLocation = request.StartLocation ?? (technician.HomeAddress?.Coordinate ?? new Coordinate(0, 0)),
                 EndLocation = request.EndLocation,
                 MaxOptimizationTimeSeconds = request.MaxOptimizationTimeSeconds
             };
@@ -210,14 +210,23 @@ public class RouteOptimizationController : ControllerBase
                 .Where(j => request.JobIds.Contains(j.Id))
                 .ToListAsync(cancellationToken);
 
+            if (technician == null)
+            {
+                return BadRequest(new ProblemDetails
+                {
+                    Title = "Technician not found",
+                    Detail = $"Technician with ID {request.TechnicianId} was not found"
+                });
+            }
+            
             var parameters = new FieldOpsOptimizer.Application.Common.Interfaces.RouteOptimizationParameters
             {
                 Jobs = jobs,
-                Technician = technician!,
+                Technician = technician,
                 Objective = ConvertToDomainObjective(request.Objective),
                 RespectTimeWindows = request.RespectTimeWindows,
                 ValidateSkills = request.ValidateSkills,
-                StartLocation = request.StartLocation ?? technician!.HomeAddress.Coordinate
+                StartLocation = request.StartLocation ?? (technician.HomeAddress?.Coordinate ?? new Coordinate(0, 0))
             };
 
             // Run comparison
@@ -267,10 +276,10 @@ public class RouteOptimizationController : ControllerBase
         
         return Ok(new AvailableAlgorithmsResponse
         {
-            Objective = objective,
+            Objective = ConvertToApiObjective(objective),
             AvailableAlgorithms = algorithms.Select(a => new AlgorithmInfo
             {
-                Algorithm = a,
+                Algorithm = ConvertToApiAlgorithm(a),
                 Name = a.ToString(),
                 Description = GetAlgorithmDescription(a),
                 Characteristics = GetAlgorithmCharacteristics(a)
@@ -371,8 +380,8 @@ public class RouteOptimizationController : ControllerBase
         {
             ApiEnums.OptimizationObjective.MinimizeDistance => DomainEnums.OptimizationObjective.MinimizeDistance,
             ApiEnums.OptimizationObjective.MinimizeTime => DomainEnums.OptimizationObjective.MinimizeTime,
-            ApiEnums.OptimizationObjective.MinimizeCost => DomainEnums.OptimizationObjective.MinimizeCost,
-            ApiEnums.OptimizationObjective.MaximizeJobs => DomainEnums.OptimizationObjective.MaximizeJobs,
+            ApiEnums.OptimizationObjective.BalanceWorkload => DomainEnums.OptimizationObjective.BalanceWorkload,
+            ApiEnums.OptimizationObjective.MaximizeRevenue => DomainEnums.OptimizationObjective.MaximizeRevenue,
             _ => DomainEnums.OptimizationObjective.MinimizeDistance
         };
     }
@@ -383,8 +392,8 @@ public class RouteOptimizationController : ControllerBase
         {
             DomainEnums.OptimizationObjective.MinimizeDistance => ApiEnums.OptimizationObjective.MinimizeDistance,
             DomainEnums.OptimizationObjective.MinimizeTime => ApiEnums.OptimizationObjective.MinimizeTime,
-            DomainEnums.OptimizationObjective.MinimizeCost => ApiEnums.OptimizationObjective.MinimizeCost,
-            DomainEnums.OptimizationObjective.MaximizeJobs => ApiEnums.OptimizationObjective.MaximizeJobs,
+            DomainEnums.OptimizationObjective.BalanceWorkload => ApiEnums.OptimizationObjective.BalanceWorkload,
+            DomainEnums.OptimizationObjective.MaximizeRevenue => ApiEnums.OptimizationObjective.MaximizeRevenue,
             _ => ApiEnums.OptimizationObjective.MinimizeDistance
         };
     }

@@ -345,7 +345,7 @@ public class JobStatusHistoryController : ControllerBase
     /// </summary>
     [HttpPost("validate-transition")]
     [ProducesResponseType(typeof(StatusTransitionValidationResultDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<StatusTransitionValidationResultDto>> ValidateTransition(
+    public Task<ActionResult<StatusTransitionValidationResultDto>> ValidateTransition(
         [FromBody] ValidateStatusTransitionDto request,
         CancellationToken cancellationToken = default)
     {
@@ -370,12 +370,12 @@ public class JobStatusHistoryController : ControllerBase
                 result.Errors.Add("Source and target status cannot be the same");
             }
 
-            return Ok(result);
+            return Task.FromResult<ActionResult<StatusTransitionValidationResultDto>>(Ok(result));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error validating status transition");
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Task.FromResult<ActionResult<StatusTransitionValidationResultDto>>(StatusCode(StatusCodes.Status500InternalServerError));
         }
     }
 

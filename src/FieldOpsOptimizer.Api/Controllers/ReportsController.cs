@@ -5,6 +5,8 @@ using FieldOpsOptimizer.Infrastructure.Data;
 using FieldOpsOptimizer.Domain.Entities;
 using FieldOpsOptimizer.Domain.Enums;
 using FieldOpsOptimizer.Domain.ValueObjects;
+using FieldOpsOptimizer.Api.DTOs;
+using AutoMapper;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 
