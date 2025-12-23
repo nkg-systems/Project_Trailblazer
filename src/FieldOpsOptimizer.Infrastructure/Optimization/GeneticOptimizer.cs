@@ -256,7 +256,7 @@ public class GeneticOptimizer : IRouteOptimizer
         FillRemainingPositions(child1, parent2, start, end);
         FillRemainingPositions(child2, parent1, start, end);
 
-        return (child1.Where(j => j != null).ToList()!, child2.Where(j => j != null).ToList()!);
+        return (child1.Where(j => j != null).Select(j => j!).ToList(), child2.Where(j => j != null).Select(j => j!).ToList());
     }
 
     private static void FillRemainingPositions(ServiceJob?[] child, List<ServiceJob> otherParent, int start, int end)
@@ -459,7 +459,7 @@ public class GeneticOptimizer : IRouteOptimizer
         return violations;
     }
 
-    private async Task<DistanceMatrix> BuildDistanceMatrixAsync(
+    private Task<DistanceMatrix> BuildDistanceMatrixAsync(
         List<ServiceJob> jobs,
         Coordinate? startLocation,
         CancellationToken cancellationToken)
@@ -495,12 +495,12 @@ public class GeneticOptimizer : IRouteOptimizer
             }
         }
 
-        return new DistanceMatrix
+        return Task.FromResult(new DistanceMatrix
         {
             Locations = locations,
             Distances = distances,
             Durations = durations
-        };
+        });
     }
 
     private RouteOptimizationResult BuildOptimizationResult(

@@ -253,7 +253,7 @@ public class NearestNeighborOptimizer : IRouteOptimizer
         return violations;
     }
 
-    private async Task<DistanceMatrix> BuildDistanceMatrixAsync(
+    private Task<DistanceMatrix> BuildDistanceMatrixAsync(
         List<ServiceJob> jobs,
         Coordinate? startLocation,
         CancellationToken cancellationToken)
@@ -295,12 +295,14 @@ public class NearestNeighborOptimizer : IRouteOptimizer
             }
         }
 
-        return new DistanceMatrix
+        var matrix = new DistanceMatrix
         {
             Locations = locations,
             Distances = distances,
             Durations = durations
         };
+        
+        return Task.FromResult(matrix);
     }
 
     private static Coordinate GetJobLocation(ServiceJob job)
