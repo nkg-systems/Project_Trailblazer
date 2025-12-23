@@ -21,19 +21,18 @@ public class TenantServiceTests
     }
 
     [Fact]
-    public void GetCurrentTenantId_ShouldReturnTenantId_FromHeader()
+    public void GetCurrentTenantId_ShouldReturnNull_FromHeader_ForSecurity()
     {
-        // Arrange
-        var expectedTenantId = "tenant-header";
+        // Arrange - Headers should NOT be used for tenant resolution (security hardening)
         var httpContext = new DefaultHttpContext();
-        httpContext.Request.Headers["X-Tenant-ID"] = expectedTenantId;
+        httpContext.Request.Headers["X-Tenant-ID"] = "tenant-header";
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
         var result = _tenantService.GetCurrentTenantId();
 
-        // Assert
-        result.Should().Be(expectedTenantId);
+        // Assert - Should return null since user is not authenticated
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -74,10 +73,16 @@ public class TenantServiceTests
     [Fact]
     public void GetCurrentTenant_ShouldReturnTenantInfo_WhenTenantResolved()
     {
-        // Arrange
+        // Arrange - Use JWT claims for tenant resolution
         var expectedTenantId = "tenant-123";
-        var httpContext = new DefaultHttpContext();
-        httpContext.Request.Headers["X-Tenant-ID"] = expectedTenantId;
+        var claims = new List<Claim>
+        {
+            new("tenant_id", expectedTenantId),
+            new(ClaimTypes.NameIdentifier, "user-1")
+        };
+        var identity = new ClaimsIdentity(claims, "TestAuthType");
+        var principal = new ClaimsPrincipal(identity);
+        var httpContext = new DefaultHttpContext { User = principal };
         _mockHttpContextAccessor.Setup(x => x.HttpContext).Returns(httpContext);
 
         // Act
