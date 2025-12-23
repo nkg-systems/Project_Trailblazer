@@ -130,7 +130,7 @@ public class WeatherData : BaseEntity
         return WeatherSeverity.Mild;
     }
 
-    private string GenerateSafetyNotes()
+    private string? GenerateSafetyNotes()
     {
         var notes = new List<string>();
 
