@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FieldOpsOptimizer.Domain.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FieldOpsOptimizer.Application.Tests", "tests\FieldOpsOptimizer.Application.Tests\FieldOpsOptimizer.Application.Tests.csproj", "{49BB6DE0-2D0F-4FE5-B72D-EF0C13E6F799}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FieldOpsOptimizer.Infrastructure.Tests", "tests\FieldOpsOptimizer.Infrastructure.Tests\FieldOpsOptimizer.Infrastructure.Tests.csproj", "{1E8E3385-0243-4413-ADAF-C3388657CD68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -64,6 +66,10 @@ Global
 		{49BB6DE0-2D0F-4FE5-B72D-EF0C13E6F799}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49BB6DE0-2D0F-4FE5-B72D-EF0C13E6F799}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49BB6DE0-2D0F-4FE5-B72D-EF0C13E6F799}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E8E3385-0243-4413-ADAF-C3388657CD68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E8E3385-0243-4413-ADAF-C3388657CD68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E8E3385-0243-4413-ADAF-C3388657CD68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E8E3385-0243-4413-ADAF-C3388657CD68}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{B8F8A8CC-9BA4-4241-AA8C-CD388F5698E6} = {E9CD02B1-FEAA-40ED-93B9-C065B72752E5}
@@ -74,5 +80,6 @@ Global
 		{41D0F1D4-DCA7-416C-8230-5E8F85E07BAC} = {E9CD02B1-FEAA-40ED-93B9-C065B72752E5}
 		{39A2BA92-BEAA-479F-B82D-EAAA8F95CF89} = {7ABBB63B-DC02-4074-A80C-043A2D5B07E5}
 		{49BB6DE0-2D0F-4FE5-B72D-EF0C13E6F799} = {7ABBB63B-DC02-4074-A80C-043A2D5B07E5}
+		{1E8E3385-0243-4413-ADAF-C3388657CD68} = {7ABBB63B-DC02-4074-A80C-043A2D5B07E5}
 	EndGlobalSection
 EndGlobal
