@@ -310,7 +310,7 @@ public class TwoOptOptimizer : IRouteOptimizer
         return violations;
     }
 
-    private async Task<DistanceMatrix> BuildDistanceMatrixAsync(
+    private Task<DistanceMatrix> BuildDistanceMatrixAsync(
         List<ServiceJob> jobs,
         Coordinate? startLocation,
         CancellationToken cancellationToken)
@@ -346,12 +346,12 @@ public class TwoOptOptimizer : IRouteOptimizer
             }
         }
 
-        return new DistanceMatrix
+        return Task.FromResult(new DistanceMatrix
         {
             Locations = locations,
             Distances = distances,
             Durations = durations
-        };
+        });
     }
 
     private RouteOptimizationResult BuildOptimizationResult(

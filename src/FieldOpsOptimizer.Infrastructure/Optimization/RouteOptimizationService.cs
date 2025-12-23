@@ -106,7 +106,7 @@ public class RouteOptimizationService : IRouteOptimizationService
         });
     }
 
-    public async Task<TimeSpan> GetEstimatedTravelTimeAsync(
+    public Task<TimeSpan> GetEstimatedTravelTimeAsync(
         Coordinate from, 
         Coordinate to, 
         CancellationToken cancellationToken = default)
@@ -115,16 +115,16 @@ public class RouteOptimizationService : IRouteOptimizationService
         var distanceKm = from.DistanceToInKilometers(to);
         var averageSpeedKmh = 40.0; // Average city driving speed
         var hours = distanceKm / averageSpeedKmh;
-        return TimeSpan.FromHours(hours);
+        return Task.FromResult(TimeSpan.FromHours(hours));
     }
 
-    public async Task<double> GetEstimatedDistanceKmAsync(
+    public Task<double> GetEstimatedDistanceKmAsync(
         Coordinate from, 
         Coordinate to, 
         CancellationToken cancellationToken = default)
     {
         // Use the coordinate distance calculation
-        return from.DistanceToInKilometers(to);
+        return Task.FromResult(from.DistanceToInKilometers(to));
     }
 
     private IRouteOptimizer? GetOptimizer(OptimizationAlgorithm algorithm)

@@ -191,7 +191,7 @@ public class OSRMRoutingService : IRoutingService
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
 
-            if (result?.Code != "Ok" || result.Routes?.Length == 0)
+            if (result?.Code != "Ok" || result?.Routes == null || result.Routes.Length == 0)
             {
                 throw new InvalidOperationException($"OSRM API error: {result?.Code} - {result?.Message}");
             }
