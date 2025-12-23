@@ -37,32 +37,10 @@ public class TenantService : ITenantService
             return null;
         }
 
-        // Try to get tenant ID from various sources in order of preference:
+        // Security: Only accept tenant ID from JWT claims for authenticated users
+        // This prevents tenant ID spoofing via headers, query parameters, or subdomains
         
-        // 1. From explicit tenant header
-        var tenantFromHeader = httpContext.Request.Headers["X-Tenant-ID"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(tenantFromHeader))
-        {
-            _logger.LogDebug("Tenant ID found in header: {TenantId}", tenantFromHeader);
-            return tenantFromHeader;
-        }
-
-        // 2. From subdomain (e.g., tenant1.example.com)
-        var host = httpContext.Request.Host.Host;
-        if (!string.IsNullOrEmpty(host) && host.Contains('.'))
-        {
-            var subdomain = host.Split('.')[0];
-            if (!string.IsNullOrEmpty(subdomain) && 
-                subdomain != "www" && 
-                subdomain != "api" && 
-                subdomain != "localhost")
-            {
-                _logger.LogDebug("Tenant ID found in subdomain: {TenantId}", subdomain);
-                return subdomain;
-            }
-        }
-
-        // 3. From user claims (for authenticated users)
+        // 1. From user claims (PRIMARY AND ONLY SOURCE for authenticated requests)
         var user = httpContext.User;
         if (user.Identity?.IsAuthenticated == true)
         {
@@ -72,14 +50,10 @@ public class TenantService : ITenantService
                 _logger.LogDebug("Tenant ID found in user claims: {TenantId}", tenantClaim.Value);
                 return tenantClaim.Value;
             }
-        }
-
-        // 4. From query parameters as a fallback (e.g., ?tenantId=...)
-        var tenantFromQuery = httpContext.Request.Query["tenantId"].FirstOrDefault();
-        if (!string.IsNullOrEmpty(tenantFromQuery))
-        {
-            _logger.LogDebug("Tenant ID found in query: {TenantId}", tenantFromQuery);
-            return tenantFromQuery;
+            
+            // If user is authenticated but has no tenant claim, log a warning
+            _logger.LogWarning("Authenticated user has no tenant_id claim. User: {UserId}", 
+                user.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "Unknown");
         }
 
         _logger.LogDebug("No tenant ID found in request context");
