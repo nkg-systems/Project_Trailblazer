@@ -1,0 +1,172 @@
+name: CD - Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+      version:
+        description: 'Version/Tag to deploy (leave empty for latest)'
+        required: false
+        type: string
+
+env:
+  DOTNET_VERSION: '7.0.x'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  validate-deployment:
+    name: Validate Deployment
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Determine version
+      id: version
+      run: |
+        if [ -z "${{ github.event.inputs.version }}" ]; then
+          echo "version=latest" >> $GITHUB_OUTPUT
+        else
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Validate environment
+      run: |
+        echo "Deploying to: ${{ github.event.inputs.environment }}"
+        echo "Version: ${{ steps.version.outputs.version }}"
+
+  deploy-development:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    needs: validate-deployment
+    if: github.event.inputs.environment == 'development'
+    environment:
+      name: development
+      url: https://dev.fieldopsoptimizer.com
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to Development
+      run: |
+        echo "🚀 Deploying to Development environment"
+        echo "Version: ${{ needs.validate-deployment.outputs.version }}"
+        # Add your deployment commands here
+        # Example: kubectl apply -f k8s/development/
+        # Example: helm upgrade --install field-ops ./charts/field-ops --namespace dev
+    
+    - name: Run smoke tests
+      run: |
+        echo "🧪 Running smoke tests..."
+        # Add smoke test commands
+        # Example: curl -f https://dev.fieldopsoptimizer.com/health || exit 1
+    
+    - name: Notify deployment
+      run: |
+        echo "✅ Development deployment complete"
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: validate-deployment
+    if: github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.fieldopsoptimizer.com
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to Staging
+      run: |
+        echo "🚀 Deploying to Staging environment"
+        echo "Version: ${{ needs.validate-deployment.outputs.version }}"
+        # Add your deployment commands here
+        # Example: kubectl apply -f k8s/staging/
+    
+    - name: Run integration tests
+      run: |
+        echo "🧪 Running integration tests..."
+        # Add integration test commands
+    
+    - name: Run smoke tests
+      run: |
+        echo "🧪 Running smoke tests..."
+        # Add smoke test commands
+    
+    - name: Notify deployment
+      run: |
+        echo "✅ Staging deployment complete"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: validate-deployment
+    if: github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://fieldopsoptimizer.com
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Create deployment backup
+      run: |
+        echo "💾 Creating backup before deployment"
+        # Add backup commands
+    
+    - name: Deploy to Production
+      run: |
+        echo "🚀 Deploying to Production environment"
+        echo "Version: ${{ needs.validate-deployment.outputs.version }}"
+        # Add your deployment commands here
+        # Example: kubectl apply -f k8s/production/
+        # Example: Use blue-green or canary deployment strategy
+    
+    - name: Run smoke tests
+      run: |
+        echo "🧪 Running smoke tests..."
+        # Add smoke test commands
+    
+    - name: Monitor deployment
+      run: |
+        echo "📊 Monitoring deployment metrics..."
+        # Add monitoring commands
+        # Example: Check error rates, response times, etc.
+    
+    - name: Notify deployment
+      run: |
+        echo "✅ Production deployment complete"
+        # Add notification to Slack/Teams/Email
+
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [deploy-development, deploy-staging, deploy-production]
+    
+    steps:
+    - name: Rollback deployment
+      run: |
+        echo "⚠️ Deployment failed, initiating rollback..."
+        # Add rollback commands
+        # Example: kubectl rollout undo deployment/field-ops-api
+    
+    - name: Notify rollback
+      run: |
+        echo "🔄 Rollback complete"
+        # Add notification

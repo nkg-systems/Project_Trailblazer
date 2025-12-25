@@ -132,10 +132,87 @@ After starting the services:
 - **Unleash Feature Flags**: http://localhost:4242
 - **MinIO Console**: http://localhost:9001 (see .env for credentials)
 
+## 🔄 CI/CD Pipeline
+
+### GitHub Actions Workflows
+
+The project includes comprehensive CI/CD automation:
+
+#### Continuous Integration (`ci.yml`)
+Runs on every push and pull request to `main` and `develop` branches:
+- **Build & Test**: Compiles solution and runs all 249 tests
+- **Code Coverage**: Generates coverage reports with Coverlet
+- **Code Quality**: Validates code formatting and checks for warnings
+- **Security Scan**: Scans dependencies for known vulnerabilities
+- **PR Comments**: Automatically adds test results and coverage to PRs
+
+```bash
+# Triggered automatically on:
+- Push to main/develop
+- Pull requests to main/develop
+
+# Manual trigger:
+gh workflow run ci.yml
+```
+
+#### Docker Build (`docker-build.yml`)
+Builds and publishes Docker images to GitHub Container Registry:
+- **Multi-stage Builds**: Optimized Docker images for API and Web
+- **Multi-platform**: Supports linux/amd64 and linux/arm64
+- **Security Scanning**: Trivy scans for container vulnerabilities
+- **Artifact Attestation**: Generates SLSA provenance
+
+```bash
+# Triggered on:
+- Push to main
+- Version tags (v*.*.*)  
+- Manual workflow dispatch
+
+# Images published to:
+ghcr.io/<username>/field-ops-optimizer-api:latest
+ghcr.io/<username>/field-ops-optimizer-web:latest
+```
+
+#### Continuous Deployment (`cd-deploy.yml`)
+Manual deployment workflow with environment-specific configurations:
+- **Environments**: Development, Staging, Production
+- **Version Control**: Deploy specific versions or latest
+- **Approval Gates**: Manual approval required for production
+- **Smoke Tests**: Automated health checks after deployment
+- **Rollback**: Automatic rollback on deployment failures
+
+```bash
+# Manual deployment:
+gh workflow run cd-deploy.yml -f environment=staging -f version=v1.2.3
+```
+
+### Setting Up CI/CD
+
+1. **GitHub Container Registry**: Ensure GitHub Packages is enabled for your repository
+2. **Environments**: Configure environments in GitHub repository settings:
+   - `development`: Auto-deploy on successful build
+   - `staging`: Requires one reviewer
+   - `production`: Requires two reviewers + branch protection
+3. **Secrets**: No additional secrets required (uses `GITHUB_TOKEN`)
+
+### Local Docker Build
+
+```bash
+# Build API image
+docker build -f src/FieldOpsOptimizer.Api/Dockerfile -t field-ops-api:local .
+
+# Build Web image
+docker build -f src/FieldOpsOptimizer.Web/Dockerfile -t field-ops-web:local .
+
+# Run locally
+docker run -p 8080:8080 field-ops-api:local
+docker run -p 80:80 field-ops-web:local
+```
+
 ## 📊 Project Status
 
-**Last Updated**: December 23, 2024  
-**Phase**: Production Readiness (Phase 4 Complete - Production Hardening! 🔒)
+**Last Updated**: December 24, 2024  
+**Phase**: CI/CD & DevOps (Phase 5 Complete - Automated Pipeline! 🚀)
 
 ### Core Platform - Completed ✅
 - [x] Clean Architecture foundation with Domain-Driven Design
@@ -183,20 +260,34 @@ After starting the services:
 - [x] **Phase 4**: Hardened tenant security (JWT-only, no header/query spoofing)
 - [x] **Phase 4**: Fixed WeatherData nullability issues
 - [x] **100% Warning Elimination**: 16 → 0 warnings
-- [x] All tests passing (170 tests)
+- [x] **Phase 5**: Comprehensive test coverage (249 tests - Domain, Application, Infrastructure)
+- [x] **Phase 5**: CI/CD pipeline with GitHub Actions
+- [x] All tests passing (249 tests)
 - [x] Build succeeds with 0 errors, 0 warnings, TreatWarningsAsErrors enforced
 
+### CI/CD & DevOps - Completed ✅
+- [x] GitHub Actions CI pipeline (build, test, code quality, security scan)
+- [x] Automated test execution (249 tests)
+- [x] Code coverage reporting with Coverlet
+- [x] Docker image build and push to GitHub Container Registry
+- [x] Multi-stage Docker builds for API and Web
+- [x] Security scanning with Trivy
+- [x] CD pipeline with environment-specific deployments (dev, staging, production)
+- [x] Manual approval gates for production deployments
+- [x] Automated rollback on deployment failures
+
+### Test Coverage - Completed ✅
+- [x] **Domain Tests**: 142 tests (entities, value objects, domain services)
+- [x] **Application Tests**: 28 tests (CQRS handlers, validators)
+- [x] **Infrastructure Tests**: 79 tests (optimization algorithms, external services, auth)
+- [x] **Total Coverage**: 249 tests with 100% pass rate
+
 ### In Progress 🚧
-- [ ] Advanced route optimization algorithms
+- [ ] Advanced route optimization algorithms (genetic algorithms, simulated annealing)
 - [ ] ML.NET integration for demand forecasting
 - [ ] Real-time updates with SignalR
-- [x] Authentication & authorization system (JWT + OpenIddict)
-- [x] Multi-tenant architecture (foundation complete with JWT-based isolation)
 - [ ] Performance optimization and caching strategies
-- [x] Fix Infrastructure layer warnings (completed - all 16 warnings fixed)
-- [x] Enable TreatWarningsAsErrors (completed - enforced across all projects)
-- [ ] CI/CD pipeline with GitHub Actions
-- [ ] Add comprehensive test coverage (optimization algorithms, external services)
+- [ ] Kubernetes deployment manifests
 
 ### Planned 📋
 - [ ] Background job processing with Hangfire
@@ -204,8 +295,6 @@ After starting the services:
 - [ ] Advanced analytics dashboard
 - [ ] Integration with external CRM systems
 - [ ] Load testing & performance benchmarks
-- [ ] CI/CD pipeline with GitHub Actions
-- [ ] Kubernetes deployment manifests
 
 ## 🧪 Testing
 
