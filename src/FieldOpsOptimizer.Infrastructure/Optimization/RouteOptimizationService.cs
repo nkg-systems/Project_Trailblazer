@@ -96,7 +96,8 @@ public class RouteOptimizationService : IRouteOptimizationService
         {
             OptimizationAlgorithm.NearestNeighbor,
             OptimizationAlgorithm.TwoOpt,
-            OptimizationAlgorithm.Genetic
+            OptimizationAlgorithm.Genetic,
+            OptimizationAlgorithm.SimulatedAnnealing
         };
 
         return algorithms.Where(alg =>
@@ -134,6 +135,7 @@ public class RouteOptimizationService : IRouteOptimizationService
             OptimizationAlgorithm.NearestNeighbor => _serviceProvider.GetService<NearestNeighborOptimizer>(),
             OptimizationAlgorithm.TwoOpt => _serviceProvider.GetService<TwoOptOptimizer>(),
             OptimizationAlgorithm.Genetic => _serviceProvider.GetService<GeneticOptimizer>(),
+            OptimizationAlgorithm.SimulatedAnnealing => _serviceProvider.GetService<SimulatedAnnealingOptimizer>(),
             _ => null
         };
     }

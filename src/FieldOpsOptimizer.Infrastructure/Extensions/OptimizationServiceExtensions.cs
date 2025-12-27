@@ -19,6 +19,10 @@ public static class OptimizationServiceExtensions
         services.AddScoped<NearestNeighborOptimizer>();
         services.AddScoped<TwoOptOptimizer>();
         services.AddScoped<GeneticOptimizer>();
+        services.AddScoped<SimulatedAnnealingOptimizer>();
+        
+        // Register benchmarking
+        services.AddScoped<OptimizerBenchmark>();
 
         // Register constraint validator
         services.AddScoped<IRouteConstraintValidator, RouteConstraintValidator>();
@@ -96,6 +100,11 @@ public class OptimizationOptions
     /// Two-opt algorithm specific options
     /// </summary>
     public TwoOptOptions TwoOpt { get; set; } = new();
+    
+    /// <summary>
+    /// Simulated annealing algorithm specific options
+    /// </summary>
+    public SimulatedAnnealingOptions SimulatedAnnealing { get; set; } = new();
 }
 
 /// <summary>
@@ -153,4 +162,30 @@ public class TwoOptOptions
     /// Number of random restarts if enabled
     /// </summary>
     public int RandomRestarts { get; set; } = 3;
+}
+
+/// <summary>
+/// Configuration options for simulated annealing algorithm
+/// </summary>
+public class SimulatedAnnealingOptions
+{
+    /// <summary>
+    /// Initial temperature for the annealing process
+    /// </summary>
+    public double InitialTemperature { get; set; } = 1000.0;
+
+    /// <summary>
+    /// Cooling rate (alpha) - how quickly temperature decreases
+    /// </summary>
+    public double CoolingRate { get; set; } = 0.995;
+
+    /// <summary>
+    /// Minimum temperature before stopping
+    /// </summary>
+    public double MinimumTemperature { get; set; } = 0.1;
+
+    /// <summary>
+    /// Maximum iterations at each temperature level
+    /// </summary>
+    public int MaxIterationsAtTemperature { get; set; } = 100;
 }
